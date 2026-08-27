@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>そだてる｜学習育成ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF6EF;
+    --paper-dim:#F1EADE;
+    --ink:#2B2620;
+    --ink-soft:#6B6154;
+    --leaf:#4F7B5B;
+    --leaf-soft:#DCE8DD;
+    --plum:#B85C7D;
+    --plum-soft:#F3DDE4;
+    --gold:#C99A3D;
+    --gold-soft:#F3E6C4;
+    --line:#E4DACA;
+    --card:#FFFFFF;
+    --radius:20px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 80px;
+  }
+
+  .app{
+    width:100%;
+    max-width:440px;
+  }
+
+  /* ---------- Header ---------- */
+  .app-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:20px;
+    padding:0 4px;
+  }
+  .app-header h1{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:22px;
+    margin:0;
+    letter-spacing:0.02em;
+  }
+  .app-header .tag{
+    font-size:11px;
+    color:var(--ink-soft);
+    letter-spacing:0.08em;
+  }
+
+  /* ---------- Character Card ---------- */
+  .char-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    padding:28px 20px 22px;
+    text-align:center;
+    position:relative;
+    box-shadow:0 1px 0 rgba(43,38,32,0.03);
+    margin-bottom:16px;
+  }
+
+  .ring-wrap{
+    position:relative;
+    width:168px;
+    height:168px;
+    margin:0 auto 14px;
+  }
+
+  .growth-ring{
+    position:absolute;
+    inset:0;
+    transform:rotate(-90deg);
+  }
+  .growth-ring circle{
+    fill:none;
+    stroke-width:6;
+    stroke-linecap:round;
+  }
+  .ring-track{ stroke:var(--leaf-soft); }
+  .ring-fill{
+    stroke:var(--leaf);
+    stroke-dasharray:465.6;
+    stroke-dashoffset:465.6;
+    transition:stroke-dashoffset 0.7s cubic-bezier(.4,1.4,.5,1);
+  }
+
+  .photo-slot{
+    position:absolute;
+    inset:14px;
+    border-radius:50%;
+    overflow:hidden;
+    background:var(--paper-dim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border:2px solid var(--card);
+  }
+  .photo-slot img{
+    width:100%;height:100%;object-fit:cover;
+  }
+  .photo-slot .placeholder{
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    padding:8px;
+  }
+  .photo-slot input{ display:none; }
+
+  .leaf-badge{
+    position:absolute;
+    width:26px;height:26px;
+    background:var(--leaf-soft);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+    border:2px solid var(--paper);
+    opacity:0;
+    transform:scale(0.4);
+    transition:all 0.4s ease;
+  }
+  .leaf-badge.show{ opacity:1; transform:scale(1); }
+  .lb-0{ top:2px; left:50%; margin-left:-13px; }
+  .lb-1{ top:34px; right:-4px; }
+  .lb-2{ bottom:34px; right:-4px; }
+  .lb-3{ bottom:2px; left:50%; margin-left:-13px; }
+  .lb-4{ bottom:34px; left:-4px; }
+  .lb-5{ top:34px; left:-4px; }
+
+  .char-name{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;
+    font-size:17px;
+    margin:2px 0 2px;
+  }
+  .char-stage{
+    font-size:12px;
+    color:var(--leaf);
+    font-weight:500;
+    margin-bottom:14px;
+  }
+
+  .xp-bar-wrap{
+    background:var(--paper-dim);
+    border-radius:99px;
+    height:10px;
+    overflow:hidden;
+    margin-bottom:6px;
+  }
+  .xp-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--gold),var(--leaf));
+    width:0%;
+    border-radius:99px;
+    transition:width 0.6s cubic-bezier(.4,1.4,.5,1);
+  }
+  .xp-label{
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+  }
+
+  .speech-bubble{
+    margin-top:16px;
+    background:var(--plum-soft);
+    color:var(--ink);
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:13px;
+    line-height:1.5;
+    text-align:left;
+    position:relative;
+    opacity:0;
+    transform:translateY(6px);
+    transition:all 0.35s ease;
+    min-height:20px;
+  }
+  .speech-bubble.show{ opacity:1; transform:translateY(0); }
+  .speech-bubble::before{
+    content:"";
+    position:absolute;
+    top:-6px;
+    left:28px;
+    width:12px;height:12px;
+    background:var(--plum-soft);
+    transform:rotate(45deg);
+  }
+
+  /* ---------- Task List ---------- */
+  .section-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    margin:26px 4px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-title .count{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:400;
+  }
+
+  .task-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .task-item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:13px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    cursor:pointer;
+    transition:background 0.2s, opacity 0.3s, transform 0.2s;
+  }
+  .task-item:active{ transform:scale(0.99); }
+  .task-item.done{
+    background:var(--leaf-soft);
+    border-color:var(--leaf-soft);
+  }
+
+  .checkbox{
+    width:22px;height:22px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:all 0.2s;
+  }
+  .task-item.done .checkbox{
+    background:var(--leaf);
+    border-color:var(--leaf);
+  }
+  .checkbox svg{
+    width:12px;height:12px;
+    opacity:0;
+    transition:opacity 0.15s;
+  }
+  .task-item.done .checkbox svg{ opacity:1; }
+
+  .task-text{
+    flex:1;
+    font-size:14px;
+  }
+  .task-item.done .task-text{
+    color:var(--ink-soft);
+    text-decoration:line-through;
+    text-decoration-color:var(--ink-soft);
+  }
+
+  .task-xp{
+    font-size:11px;
+    color:var(--gold);
+    font-weight:700;
+    background:var(--gold-soft);
+    padding:3px 8px;
+    border-radius:99px;
+    flex-shrink:0;
+  }
+
+  .task-del{
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    font-size:16px;
+    cursor:pointer;
+    padding:2px 4px;
+    line-height:1;
+    opacity:0.5;
+  }
+  .task-del:hover{ opacity:1; }
+
+  .add-task-row{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .add-task-row input{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:13px;
+    font-family:inherit;
+    background:var(--card);
+    color:var(--ink);
+  }
+  .add-task-row input:focus{
+    outline:none;
+    border-color:var(--leaf);
+  }
+  .add-task-row button{
+    border:none;
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:12px;
+    padding:0 18px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .add-task-row button:hover{ opacity:0.85; }
+
+  .empty-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:18px 0;
+  }
+
+  .reset-link{
+    display:block;
+    text-align:center;
+    margin-top:28px;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:inherit;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="app-header">
+    <h1>そだてる</h1>
+    <span class="tag">学習育成ノート</span>
+  </div>
+
+  <div class="char-card">
+    <div class="ring-wrap">
+      <svg class="growth-ring" viewBox="0 0 168 168">
+        <circle class="ring-track" cx="84" cy="84" r="74"></circle>
+        <circle class="ring-fill" id="ringFill" cx="84" cy="84" r="74"></circle>
+      </svg>
+      <div class="leaf-badge lb-0" id="lb0">🌱</div>
+      <div class="leaf-badge lb-1" id="lb1">🌿</div>
+      <div class="leaf-badge lb-2" id="lb2">🍀</div>
+      <div class="leaf-badge lb-3" id="lb3">🌸</div>
+      <div class="leaf-badge lb-4" id="lb4">🌼</div>
+      <div class="leaf-badge lb-5" id="lb5">⭐</div>
+      <label class="photo-slot" id="photoSlot">
+        <span class="placeholder" id="photoPlaceholder">タップして<br>写真を設定</span>
+        <input type="file" accept="image/*" id="photoInput">
+      </label>
+    </div>
+
+    <div class="char-name" id="charName">名もなき苗</div>
+    <div class="char-stage" id="charStage">Lv.1 ・ たねの段階</div>
+
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-fill" id="xpBarFill"></div>
+    </div>
+    <div class="xp-label">
+      <span id="xpCurrent">0 XP</span>
+      <span id="xpNext">次のレベルまで 100 XP</span>
+    </div>
+
+    <div class="speech-bubble" id="speechBubble"></div>
+  </div>
+
+  <div class="section-title">
+    今日のタスク
+    <span class="count" id="taskCount">0 / 0 完了</span>
+  </div>
+
+  <div class="task-list" id="taskList"></div>
+
+  <div id="emptyNote" class="empty-note" style="display:none;">タスクはまだありません。下から追加してみましょう。</div>
+
+  <div class="add-task-row">
+    <input type="text" id="newTaskInput" placeholder="例：英単語を10個覚える" maxlength="40">
+    <button id="addTaskBtn">追加</button>
+  </div>
+
+  <button class="reset-link" id="resetBtn">すべてリセットする</button>
+</div>
+
+<script>
+(function(){
+  // ---------- State ----------
+  let state = {
+    xp: 0,
+    level: 1,
+    tasks: [
+      { id: 1, text: '教材を10分読む', xp: 20, done: false },
+      { id: 2, text: '英単語を10個覚える', xp: 20, done: false },
+      { id: 3, text: '昨日の復習をする', xp: 15, done: false },
+    ],
+    nextId: 4,
+    photo: null,
+  };
+
+  const XP_PER_LEVEL = 100;
+  const STAGES = [
+    { min:1, max:2, label:'たねの段階', badgeIdx:0 },
+    { min:3, max:4, label:'芽が出た段階', badgeIdx:1 },
+    { min:5, max:6, label:'葉が茂る段階', badgeIdx:2 },
+    { min:7, max:8, label:'つぼみの段階', badgeIdx:3 },
+    { min:9, max:10, label:'花が咲いた段階', badgeIdx:4 },
+    { min:11, max:9999, label:'満開・成熟の段階', badgeIdx:5 },
+  ];
+
+  const MESSAGES = {
+    complete: [
+      'えらい、その調子！',
+      '今日もひとつ、前に進んだね。',
+      'コツコツって、実はいちばん強い。',
+      'よくやった。ちゃんと見てるよ。',
+      '積み重ねが力になってるよ。',
+    ],
+    levelUp: [
+      'なんだか体が軽い……成長した気がする！',
+      'レベルが上がった！ここまで続けてきた証だよ。',
+      '少しだけ、姿が変わった気がしない？',
+    ],
+    idle: [
+      '今日のタスク、待ってるよ。',
+      '無理のない範囲で、ひとつだけでもいいよ。',
+    ],
+  };
+
+  // ---------- Elements ----------
+  const els = {
+    ringFill: document.getElementById('ringFill'),
+    xpBarFill: document.getElementById('xpBarFill'),
+    xpCurrent: document.getElementById('xpCurrent'),
+    xpNext: document.getElementById('xpNext'),
+    charStage: document.getElementById('charStage'),
+    speechBubble: document.getElementById('speechBubble'),
+    taskList: document.getElementById('taskList'),
+    taskCount: document.getElementById('taskCount'),
+    emptyNote: document.getElementById('emptyNote'),
+    newTaskInput: document.getElementById('newTaskInput'),
+    addTaskBtn: document.getElementById('addTaskBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    photoSlot: document.getElementById('photoSlot'),
+    photoInput: document.getElementById('photoInput'),
+    photoPlaceholder: document.getElementById('photoPlaceholder'),
+  };
+
+  const RING_CIRC = 2 * Math.PI * 74;
+  els.ringFill.style.strokeDasharray = RING_CIRC;
+
+  // ---------- Rendering ----------
+  function getStage(level){
+    return STAGES.find(s => level >= s.min && level <= s.max) || STAGES[STAGES.length-1];
+  }
+
+  function render(){
+    // XP / level math
+    const xpIntoLevel = state.xp % XP_PER_LEVEL;
+    const pct = xpIntoLevel / XP_PER_LEVEL;
+
+    els.ringFill.style.strokeDashoffset = RING_CIRC * (1 - pct);
+    els.xpBarFill.style.width = (pct*100) + '%';
+    els.xpCurrent.textContent = state.xp + ' XP';
+    els.xpNext.textContent = '次のレベルまで ' + (XP_PER_LEVEL - xpIntoLevel) + ' XP';
+
+    const stage = getStage(state.level);
+    els.charStage.textContent = 'Lv.' + state.level + ' ・ ' + stage.label;
+
+    for(let i=0;i<STAGES.length;i++){
+      const badge = document.getElementById('lb'+i);
+      if(i <= stage.badgeIdx){ badge.classList.add('show'); }
+      else{ badge.classList.remove('show'); }
+    }
+
+    // Tasks
+    els.taskList.innerHTML = '';
+    if(state.tasks.length === 0){
+      els.emptyNote.style.display = 'block';
+    } else {
+      els.emptyNote.style.display = 'none';
+    }
+    state.tasks.forEach(task => {
+      const item = document.createElement('div');
+      item.className = 'task-item' + (task.done ? ' done' : '');
+      item.innerHTML =
+        '<div class="checkbox">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</div>' +
+        '<div class="task-text"></div>' +
+        '<div class="task-xp">+' + task.xp + ' XP</div>' +
+        '<button class="task-del" title="削除">×</button>';
+      item.querySelector('.task-text').textContent = task.text;
+      item.addEventListener('click', (e) => {
+        if(e.target.closest('.task-del')) return;
+        toggleTask(task.id);
+      });
+      item.querySelector('.task-del').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteTask(task.id);
+      });
+      els.taskList.appendChild(item);
+    });
+
+    const doneCount = state.tasks.filter(t=>t.done).length;
+    els.taskCount.textContent = doneCount + ' / ' + state.tasks.length + ' 完了';
+  }
+
+  function showSpeech(text){
+    els.speechBubble.textContent = text;
+    els.speechBubble.classList.remove('show');
+    void els.speechBubble.offsetWidth; // reflow for restart
+    els.speechBubble.classList.add('show');
+  }
+
+  function randomFrom(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function toggleTask(id){
+    const task = state.tasks.find(t=>t.id===id);
+    if(!task) return;
+
+    if(!task.done){
+      task.done = true;
+      const prevLevel = state.level;
+      state.xp += task.xp;
+      state.level = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+
+      render();
+      if(state.level > prevLevel){
+        showSpeech(randomFrom(MESSAGES.levelUp));
+      } else {
+        showSpeech(randomFrom(MESSAGES.complete));
+      }
+    } else {
+      // undo
+      task.done = false;
+      state.xp = Math.max(0, state.xp - task.xp);
+      state.level = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+      render();
+    }
+  }
+
+  function deleteTask(id){
+    state.tasks = state.tasks.filter(t=>t.id!==id);
+    render();
+  }
+
+  function addTask(){
+    const val = els.newTaskInput.value.trim();
+    if(!val) return;
+    state.tasks.push({ id: state.nextId++, text: val, xp: 15, done:false });
+    els.newTaskInput.value = '';
+    render();
+  }
+
+  els.addTaskBtn.addEventListener('click', addTask);
+  els.newTaskInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') addTask();
+  });
+
+  els.photoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      let img = els.photoSlot.querySelector('img');
+      if(!img){
+        img = document.createElement('img');
+        els.photoPlaceholder.remove();
+        els.photoSlot.appendChild(img);
+      }
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  els.resetBtn.addEventListener('click', () => {
+    if(!confirm('進捗とタスクをすべてリセットします。よろしいですか？')) return;
+    state.xp = 0;
+    state.level = 1;
+    state.tasks.forEach(t => t.done = false);
+    render();
+    showSpeech('また、ここから始めよう。');
+  });
+
+  // initial
+  render();
+  setTimeout(() => showSpeech(randomFrom(MESSAGES.idle)), 400);
+})();
+</script>
+
+</body>
+</html>

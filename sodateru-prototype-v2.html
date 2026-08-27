@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>そだてる｜学習育成ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F0DCC4;         /* はだいろ（ページ背景） */
+    --card:#FBF3E5;       /* カード面 */
+    --card-alt:#FFFFFF;   /* 写真スロット等 */
+    --ink:#221A12;        /* ほぼ黒（枠線・影） */
+    --ink-soft:#7A6E5C;
+    --leaf:#4F7B5B;
+    --leaf-soft:#DCE8D0;
+    --gold:#D9A73D;
+    --gold-soft:#F3E3B8;
+    --red:#D6524A;
+    --green-btn:#3E7A52;
+    --plum-soft:#F0DCE3;
+    --line:2.5px solid var(--ink);
+    --shadow:4px 4px 0 var(--ink);
+    --shadow-sm:3px 3px 0 var(--ink);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+
+  .app{ width:100%; max-width:440px; }
+
+  .tagline{
+    text-align:center;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:17px;
+    color:var(--leaf);
+    letter-spacing:0.04em;
+    margin:2px 0 20px;
+  }
+
+  /* ---------- Character Card ---------- */
+  .char-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px 20px 24px;
+    text-align:center;
+    margin-bottom:16px;
+  }
+
+  .stage-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .stage-icon{
+    width:44px;height:44px;
+    border-radius:50%;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    font-size:19px;
+    opacity:0.35;
+    transition:all 0.3s ease;
+  }
+  .stage-icon.active{
+    opacity:1;
+    background:var(--gold-soft);
+    border:3px solid var(--gold);
+    box-shadow:var(--shadow-sm);
+    transform:translateY(-2px);
+  }
+  .stage-icon.reached{
+    opacity:0.9;
+  }
+
+  .ring-wrap{
+    position:relative;
+    width:172px;
+    height:172px;
+    margin:0 auto 14px;
+  }
+  .photo-slot{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    overflow:hidden;
+    background:var(--card-alt);
+    border:3px solid var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
+  .photo-slot img{ width:100%;height:100%;object-fit:cover; }
+  .photo-slot .placeholder{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    color:var(--ink);
+  }
+  .photo-slot .placeholder svg{ width:34px;height:34px; }
+  .photo-slot .placeholder span{
+    font-size:13px;
+    font-weight:700;
+  }
+  .photo-slot input{ display:none; }
+
+  .level-badge{
+    position:absolute;
+    bottom:2px;
+    right:2px;
+    background:var(--red);
+    color:#fff;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:14px;
+    padding:6px 14px;
+    border-radius:99px;
+    border:2.5px solid var(--ink);
+    box-shadow:var(--shadow-sm);
+  }
+
+  .char-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:24px;
+    margin:4px 0 4px;
+  }
+  .char-sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+
+  /* ---------- Stat row ---------- */
+  .stat-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .stat-card{
+    flex:1;
+    background:var(--card);
+    border:var(--line);
+    border-radius:18px;
+    box-shadow:var(--shadow-sm);
+    padding:14px 10px;
+    text-align:center;
+  }
+  .stat-label{
+    font-size:12px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .stat-value{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:22px;
+  }
+  .stat-value .unit{ font-size:14px; margin-left:2px; }
+
+  /* ---------- EXP card ---------- */
+  .exp-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:18px;
+    box-shadow:var(--shadow-sm);
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .exp-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+  }
+  .exp-top .exp-label{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:14px;
+    letter-spacing:0.05em;
+  }
+  .exp-top .exp-detail{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .exp-track{
+    height:16px;
+    background:var(--leaf-soft);
+    border:2px solid var(--ink);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .exp-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--leaf));
+    border-radius:99px 0 0 99px;
+    transition:width 0.6s cubic-bezier(.4,1.4,.5,1);
+  }
+
+  /* ---------- Speech bubble ---------- */
+  .speech-bubble{
+    background:var(--plum-soft);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:11px 14px;
+    font-size:13px;
+    line-height:1.5;
+    margin-bottom:16px;
+    opacity:0;
+    transform:translateY(6px);
+    transition:all 0.35s ease;
+    min-height:20px;
+  }
+  .speech-bubble.show{ opacity:1; transform:translateY(0); }
+
+  /* ---------- Record card ---------- */
+  .record-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+  }
+  .record-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:16px;
+    margin:0 0 12px;
+  }
+  .record-input-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .record-input-row input{
+    flex:1;
+    border:2px solid var(--ink);
+    border-radius:12px;
+    padding:12px 13px;
+    font-size:13.5px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+  }
+  .record-input-row input::placeholder{ color:#B3A794; }
+  .record-input-row input:focus{ outline:none; background:#FFFDF9; }
+  .record-input-row button{
+    border:2px solid var(--ink);
+    background:var(--green-btn);
+    color:#fff;
+    border-radius:12px;
+    padding:0 20px;
+    font-size:13.5px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:transform 0.1s;
+  }
+  .record-input-row button:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  .record-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .record-item{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    font-size:13.5px;
+    background:var(--leaf-soft);
+    border:1.5px solid var(--ink);
+    border-radius:10px;
+    padding:9px 12px;
+  }
+  .record-item .leaf-mark{ flex-shrink:0; }
+  .record-item .rec-text{ flex:1; }
+  .record-item .rec-xp{
+    font-size:11px;
+    color:var(--leaf);
+    font-weight:700;
+    flex-shrink:0;
+  }
+
+  .empty-note{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    padding:6px 0 2px;
+  }
+
+  .reset-link{
+    display:block;
+    text-align:center;
+    margin:24px auto 0;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:inherit;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="tagline">続けるほど、育つ。</div>
+
+  <div class="char-card">
+    <div class="stage-row" id="stageRow">
+      <div class="stage-icon" data-idx="0">🥚</div>
+      <div class="stage-icon" data-idx="1">🌱</div>
+      <div class="stage-icon" data-idx="2">🌿</div>
+      <div class="stage-icon" data-idx="3">🌸</div>
+      <div class="stage-icon" data-idx="4">🔥</div>
+    </div>
+
+    <div class="ring-wrap">
+      <label class="photo-slot" id="photoSlot">
+        <span class="placeholder" id="photoPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+          <span>写真を選ぶ</span>
+        </span>
+        <input type="file" accept="image/*" id="photoInput">
+      </label>
+      <div class="level-badge" id="levelBadge">Lv.1</div>
+    </div>
+
+    <div class="char-title" id="charTitle">たまご期</div>
+    <div class="char-sub" id="charSub">Lv.1 ・ 通算0回の記録</div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">連続記録</div>
+      <div class="stat-value">🔥 <span id="streakVal">0</span><span class="unit">日</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">記録した回数</div>
+      <div class="stat-value"><span id="totalVal">0</span><span class="unit">回</span></div>
+    </div>
+  </div>
+
+  <div class="exp-card">
+    <div class="exp-top">
+      <span class="exp-label">EXP</span>
+      <span class="exp-detail" id="expDetail">0 / 100（次のレベルまで100）</span>
+    </div>
+    <div class="exp-track"><div class="exp-fill" id="expFill"></div></div>
+  </div>
+
+  <div class="speech-bubble" id="speechBubble"></div>
+
+  <div class="record-card">
+    <div class="record-title">今日、何をした？</div>
+    <div class="record-input-row">
+      <input type="text" id="recordInput" placeholder="例）Python道場 レッスンⅡ" maxlength="40">
+      <button id="recordBtn">記録する</button>
+    </div>
+    <div class="record-list" id="recordList"></div>
+    <div class="empty-note" id="emptyNote">まだ記録がありません。最初の一歩を残してみよう。</div>
+  </div>
+
+  <button class="reset-link" id="resetBtn">記録をリセットする</button>
+</div>
+
+<script>
+(function(){
+  const XP_PER_RECORD = 20;
+  const XP_PER_LEVEL = 100;
+
+  const STAGES = [
+    { min:1, max:2, label:'たまご期' },
+    { min:3, max:4, label:'めばえ期' },
+    { min:5, max:6, label:'しげり期' },
+    { min:7, max:8, label:'かいか期' },
+    { min:9, max:9999, label:'らんまん期' },
+  ];
+
+  const MESSAGES = {
+    complete: [
+      'えらい、その調子！',
+      '今日もひとつ、前に進んだね。',
+      'コツコツって、実はいちばん強い。',
+      'よくやった。ちゃんと見てるよ。',
+    ],
+    levelUp: [
+      'なんだか体が軽い……成長した気がする！',
+      'レベルが上がった！ここまで続けてきた証だよ。',
+      '少しだけ、姿が変わった気がしない？',
+    ],
+  };
+
+  let state = { xp:0, level:1, streak:0, records:[] };
+
+  const els = {
+    stageIcons: document.querySelectorAll('.stage-icon'),
+    levelBadge: document.getElementById('levelBadge'),
+    charTitle: document.getElementById('charTitle'),
+    charSub: document.getElementById('charSub'),
+    streakVal: document.getElementById('streakVal'),
+    totalVal: document.getElementById('totalVal'),
+    expDetail: document.getElementById('expDetail'),
+    expFill: document.getElementById('expFill'),
+    speechBubble: document.getElementById('speechBubble'),
+    recordInput: document.getElementById('recordInput'),
+    recordBtn: document.getElementById('recordBtn'),
+    recordList: document.getElementById('recordList'),
+    emptyNote: document.getElementById('emptyNote'),
+    photoSlot: document.getElementById('photoSlot'),
+    photoInput: document.getElementById('photoInput'),
+    photoPlaceholder: document.getElementById('photoPlaceholder'),
+  };
+
+  function stageIndex(level){
+    return STAGES.findIndex(s => level >= s.min && level <= s.max);
+  }
+  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function render(){
+    const idx = stageIndex(state.level) === -1 ? STAGES.length-1 : stageIndex(state.level);
+    els.stageIcons.forEach((icon,i) => {
+      icon.classList.toggle('active', i === idx);
+      icon.classList.toggle('reached', i < idx);
+    });
+
+    els.levelBadge.textContent = 'Lv.' + state.level;
+    els.charTitle.textContent = STAGES[idx].label;
+    els.charSub.textContent = 'Lv.' + state.level + ' ・ 通算' + state.records.length + '回の記録';
+
+    const xpIntoLevel = state.xp % XP_PER_LEVEL;
+    const pct = xpIntoLevel / XP_PER_LEVEL;
+    els.expFill.style.width = (pct*100) + '%';
+    els.expDetail.textContent = xpIntoLevel + ' / ' + XP_PER_LEVEL + '（次のレベルまで' + (XP_PER_LEVEL - xpIntoLevel) + '）';
+
+    els.streakVal.textContent = state.streak;
+    els.totalVal.textContent = state.records.length;
+
+    els.recordList.innerHTML = '';
+    state.records.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'record-item';
+      item.innerHTML = '<span class="leaf-mark">🌿</span><span class="rec-text"></span><span class="rec-xp">+' + XP_PER_RECORD + ' XP</span>';
+      item.querySelector('.rec-text').textContent = r;
+      els.recordList.appendChild(item);
+    });
+    els.emptyNote.style.display = state.records.length === 0 ? 'block' : 'none';
+  }
+
+  function showSpeech(text){
+    els.speechBubble.textContent = text;
+    els.speechBubble.classList.remove('show');
+    void els.speechBubble.offsetWidth;
+    els.speechBubble.classList.add('show');
+  }
+
+  function addRecord(){
+    const val = els.recordInput.value.trim();
+    if(!val) return;
+
+    const prevLevel = state.level;
+    state.records.push(val);
+    state.xp += XP_PER_RECORD;
+    state.level = Math.floor(state.xp / XP_PER_LEVEL) + 1;
+    state.streak += 1;
+
+    els.recordInput.value = '';
+    render();
+    showSpeech(state.level > prevLevel ? randomFrom(MESSAGES.levelUp) : randomFrom(MESSAGES.complete));
+  }
+
+  els.recordBtn.addEventListener('click', addRecord);
+  els.recordInput.addEventListener('keydown', e => { if(e.key === 'Enter') addRecord(); });
+
+  els.photoInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      let img = els.photoSlot.querySelector('img');
+      if(!img){
+        img = document.createElement('img');
+        els.photoPlaceholder.remove();
+        els.photoSlot.appendChild(img);
+      }
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(!confirm('記録と進捗をすべてリセットします。よろしいですか？')) return;
+    state = { xp:0, level:1, streak:0, records:[] };
+    render();
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
