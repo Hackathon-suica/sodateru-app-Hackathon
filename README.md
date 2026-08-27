@@ -9,15 +9,28 @@
 - 好きな写真をキャラクターとして設定できる
 - 記録するたびにキャラクターが一言コメントを返す
 
-## ファイル構成
+## 構成
 
-- `index.html` — 最新版のプロトタイプ（そのままブラウザで開けます）
-- `sodateru-prototype.html` — 初期プロトタイプ（チェックリスト形式）
-- `sodateru-prototype-v2.html` — 現行版（自由記述の記録ログ形式、ネオブルータリズム風UI）
+```
+frontend/   … 静的なUI（HTML/CSS/JS、フレームワーク不使用）
+backend/    … 記録・XP・レベルを保存する最小限のAPIサーバー（Node.js / Express）
+```
 
-## 使い方
+それぞれの詳しい使い方は `frontend/README.md` と `backend/README.md` を参照してください。
 
-`index.html` をブラウザで開くだけで動作します（外部サーバー不要、フォント読み込みのみインターネット接続が必要です）。
+## クイックスタート
+
+```bash
+# フロントエンドだけ試す場合
+open frontend/index.html   # または frontend/index.html をブラウザで開く
+
+# バックエンドも動かす場合
+cd backend
+npm install
+npm start
+```
+
+現時点ではフロントエンドとバックエンドはまだ接続されていません（フロントはブラウザのメモリだけで完結しています）。接続方法は `backend/README.md` を参照してください。
 
 ## 今後の拡張候補
 
