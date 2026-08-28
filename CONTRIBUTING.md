@@ -5,8 +5,8 @@
 リポジトリのオーナー（athony687）に `Settings → Collaborators` から招待してもらえば、直接pushできます。
 
 ```bash
-git clone https://github.com/athony687/sodateru-app-hackerson.git
-cd sodateru-app-hackerson
+git clone https://github.com/athony687/sodateru-app-Hackathon.git
+cd sodateru-app-Hackathon
 
 # 作業用ブランチを作る（mainに直接pushせず、ブランチを切るのがおすすめ）
 git checkout -b feature/わかりやすい名前
@@ -25,8 +25,8 @@ push後、GitHub上で「Compare & pull request」ボタンが出るので、そ
 2. 自分のフォークをcloneして編集する
 
 ```bash
-git clone https://github.com/自分のユーザー名/sodateru-app-hackerson.git
-cd sodateru-app-hackerson
+git clone https://github.com/自分のユーザー名/sodateru-app-Hackathon.git
+cd sodateru-app-Hackathon
 git checkout -b feature/わかりやすい名前
 # 編集 → commit → push
 ```
