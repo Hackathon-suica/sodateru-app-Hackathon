@@ -18,7 +18,7 @@ const XP_PER_LEVEL = 100;
 
 const STAGES = [
   { min: 1, max: 2, label: 'たまご期' },
-  { min: 3, max: 4, label: 'めばえ期' },
+  { min: 3, max: 4, label: 'メル」機' },
   { min: 5, max: 6, label: 'しげり期' },
   { min: 7, max: 8, label: 'かいか期' },
   { min: 9, max: Infinity, label: 'らんまん期' },
