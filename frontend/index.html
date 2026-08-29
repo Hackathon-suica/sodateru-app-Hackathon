@@ -177,15 +177,6 @@
     justify-content:center;
     border-bottom:var(--line);
   }
-  .char-photo{
-    width:118px;height:118px;
-    border-radius:50%;
-    border:3px solid var(--ink);
-    background:var(--card-alt);
-    object-fit:cover;
-    margin-bottom:-38px;
-    box-shadow:var(--shadow-sm);
-  }
   .level-pill{
     position:absolute;
     top:12px;
@@ -201,10 +192,11 @@
     box-shadow:var(--shadow-sm);
   }
   .char-body{
-    padding:46px 20px 20px;
+    padding:20px;
   }
 
   .speech-bubble{
+    position:relative;
     background:var(--plum-soft);
     border:2px solid var(--ink);
     border-radius:14px;
@@ -212,11 +204,34 @@
     font-size:13px;
     line-height:1.5;
     margin-bottom:16px;
+    margin-top:12px;
     text-align:left;
     opacity:0;
     transform:translateY(6px);
     transition:all 0.35s ease;
     min-height:20px;
+  }
+  .speech-bubble::before{
+    content:'';
+    position:absolute;
+    top:-12px;
+    left:28px;
+    width:0;
+    height:0;
+    border-left:9px solid transparent;
+    border-right:9px solid transparent;
+    border-bottom:12px solid var(--ink);
+  }
+  .speech-bubble::after{
+    content:'';
+    position:absolute;
+    top:-8.5px;
+    left:31px;
+    width:0;
+    height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-bottom:9px solid var(--plum-soft);
   }
   .speech-bubble.show{ opacity:1; transform:translateY(0); }
 
@@ -387,7 +402,6 @@
     <div class="card char-card">
       <div class="char-visual" id="charVisual">
         <div class="level-pill" id="levelPill">Lv.1</div>
-        <img class="char-photo" id="charPhoto" src="" alt="キャラクター">
       </div>
       <div class="char-body">
         <div class="speech-bubble" id="speechBubble"></div>
@@ -479,7 +493,6 @@
     screenB: document.getElementById('screenB'),
 
     charVisual: document.getElementById('charVisual'),
-    charPhoto: document.getElementById('charPhoto'),
     levelPill: document.getElementById('levelPill'),
     speechBubble: document.getElementById('speechBubble'),
     expDetail: document.getElementById('expDetail'),
@@ -558,9 +571,8 @@
 
   // ---------- 画面B：描画 ----------
   function renderScreenB(){
-    els.charPhoto.src = state.facePhoto || '';
-    els.charPhoto.style.visibility = state.facePhoto ? 'visible' : 'hidden';
-    els.charVisual.style.backgroundImage = state.bgPhoto ? `url(${state.bgPhoto})` : '';
+    const visualPhoto = state.facePhoto || state.bgPhoto;
+    els.charVisual.style.backgroundImage = visualPhoto ? `url(${visualPhoto})` : '';
 
     const level = currentLevel();
     els.levelPill.textContent = 'Lv.' + level;
