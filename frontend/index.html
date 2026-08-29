@@ -313,10 +313,9 @@
     cursor:pointer;
     margin-top:4px;
   }
-  .change-char-btn:disabled{
+  .change-char-btn.locked{
     color:var(--ink-soft);
     background:var(--bg);
-    cursor:not-allowed;
     border-color:var(--ink-soft);
   }
   .change-char-note{
@@ -434,7 +433,7 @@
         <button class="task-btn" id="mainBtn">やった</button>
       </div>
 
-      <button class="change-char-btn" id="changeCharBtn" disabled>キャラクターを変える</button>
+      <button class="change-char-btn" id="changeCharBtn">キャラクターを変える</button>
       <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
 
       <button class="day-advance" id="dayAdvanceBtn">（デモ用）翌日へ進める</button>
@@ -460,6 +459,11 @@
       'レベルが上がった！ここまで続けてきた証だよ。',
     ],
     allDoneToday: '今日の分はおしまい。ゆっくり休んでね。',
+    changeCharBlocked: [
+      '逃げるな！まだLvMAXじゃないよ。',
+      'ここで諦めるの？まだ育ってる途中だよ。',
+      'Lv50になるまでは、私と一緒にいこう。',
+    ],
   };
 
   let state = {
@@ -591,7 +595,7 @@
     updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
 
     const maxed = level >= MAX_LEVEL;
-    els.changeCharBtn.disabled = !maxed;
+    els.changeCharBtn.classList.toggle('locked', !maxed);
     els.changeCharNote.textContent = maxed
       ? 'Lv50に到達しました。キャラクターを変更できます。'
       : 'Lv50に到達すると、キャラクターを変更できます（現在 Lv' + level + '）';
@@ -640,7 +644,13 @@
   els.mainBtn.addEventListener('click', () => completeTask('main'));
 
   els.changeCharBtn.addEventListener('click', () => {
-    if(els.changeCharBtn.disabled) return;
+    const maxed = currentLevel() >= MAX_LEVEL;
+
+    if(!maxed){
+      showSpeech(randomFrom(MESSAGES.changeCharBlocked));
+      return;
+    }
+
     els.screenB.classList.add('hidden');
     els.screenA.classList.remove('hidden');
   });
