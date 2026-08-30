@@ -1016,7 +1016,7 @@
       renderUnitTasks();
     } else {
       els.taskCardTitle.textContent = '今日のタスク';
-      els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。';
+      els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。1日1つもタスクをやらないと経験値が下がります。';
       els.reviewAmount.textContent = state.reviewAmount + ' ' + state.unitLabel;
       els.mainAmount.textContent = state.mainAmount + ' ' + state.unitLabel;
       updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
@@ -1236,11 +1236,16 @@
       return;
     }
 
+    // ページモード：その日にタスクを1つも達成していなければ経験値が減る（単元モードと同じ）
+    const achievedToday = state.reviewDoneToday || state.mainDoneToday;
+    if(!achievedToday) state.xp = Math.max(0, state.xp - MISS_PENALTY_XP);
     state.daysPassed += 1;
     state.reviewDoneToday = false;
     state.mainDoneToday = false;
     renderScreenB();
-    showSpeech('新しい日が始まった。今日も一歩ずつ。');
+    showSpeech(achievedToday
+      ? '新しい日が始まった。今日も一歩ずつ。'
+      : '昨日はタスクをやらなかった…経験値が' + MISS_PENALTY_XP + '下がった。');
   });
 })();
 </script>
