@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ぐんぐんそだてる｜学習育成ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F0DCC4;
+    --card:#FBF3E5;
+    --card-alt:#FFFFFF;
+    --ink:#221A12;
+    --ink-soft:#7A6E5C;
+    --leaf:#4F7B5B;
+    --leaf-soft:#DCE8D0;
+    --gold:#D9A73D;
+    --gold-soft:#F3E3B8;
+    --red:#D6524A;
+    --green-btn:#3E7A52;
+    --plum-soft:#F0DCE3;
+    --line:2.5px solid var(--ink);
+    --shadow:4px 4px 0 var(--ink);
+    --shadow-sm:3px 3px 0 var(--ink);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+  .app{ width:100%; max-width:440px; }
+  .hidden{ display:none !important; }
+
+  /* 画面Bは単元数が増えると横に広がる（PC幅） */
+  #screenB{ max-width:440px; margin:0 auto; }
+  @media (min-width:760px){
+    body.screen-b .app{ max-width:1120px; }
+    body.screen-b #screenB{
+      max-width:none;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+    body.screen-b #screenB > .card{ margin-bottom:0; }
+    body.screen-b .char-visual{ aspect-ratio:5/4; }
+    body.screen-b .unit-grid{ grid-template-columns:repeat(4, 1fr); }
+  }
+
+  .tagline{
+    text-align:center;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:17px;
+    color:var(--leaf);
+    letter-spacing:0.04em;
+    margin:2px 0 20px;
+  }
+
+  .card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:16px;
+    margin:0 0 4px;
+  }
+  .card-desc{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.6;
+  }
+
+  /* ---------- Screen A: setup ---------- */
+  .upload-row{
+    margin-bottom:18px;
+  }
+  .upload-box{
+    width:100%;
+    aspect-ratio:16/11;
+    border:3px solid var(--ink);
+    border-radius:16px;
+    background:var(--card-alt);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    overflow:hidden;
+    position:relative;
+  }
+  .upload-box img{ width:100%;height:100%;object-fit:cover; }
+  .upload-box svg{ width:34px;height:34px; }
+  .upload-box span{ font-size:13px; font-weight:700; }
+  .upload-box input{ display:none; }
+  .upload-label{
+    text-align:center;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+
+  /* 分け方の切り替え（ページ／単元） */
+  .split-toggle{
+    display:flex;
+    gap:0;
+    border:2.5px solid var(--ink);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .split-toggle button{
+    flex:1;
+    border:none;
+    background:var(--card-alt);
+    color:var(--ink-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:11px 6px;
+    cursor:pointer;
+  }
+  .split-toggle button + button{ border-left:2.5px solid var(--ink); }
+  .split-toggle button.active{
+    background:var(--green-btn);
+    color:#fff;
+  }
+  .split-hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:-6px 0 14px;
+  }
+  .field .input-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .field input[type="number"]{
+    flex:1;
+    border:2px solid var(--ink);
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:14px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+    width:100%;
+  }
+  .field input:focus{ outline:none; background:#FFFDF9; }
+  .field .unit{ font-size:13px; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+
+  .primary-btn{
+    width:100%;
+    border:2.5px solid var(--ink);
+    background:var(--green-btn);
+    color:#fff;
+    border-radius:14px;
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:transform 0.1s;
+  }
+  .primary-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .primary-btn:disabled{
+    background:#C9BFA9;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+
+  .form-error{
+    font-size:12px;
+    color:var(--red);
+    font-weight:700;
+    margin:-6px 0 12px;
+    min-height:16px;
+  }
+
+  /* ---------- Screen B: main ---------- */
+  .char-card{
+    text-align:center;
+    padding:0;
+    overflow:hidden;
+  }
+  .char-visual{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/11;
+    background:linear-gradient(160deg,var(--leaf-soft),var(--gold-soft));
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    border-bottom:var(--line);
+  }
+  .level-pill{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:var(--red);
+    color:#fff;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:13px;
+    padding:5px 12px;
+    border-radius:99px;
+    border:2px solid var(--ink);
+    box-shadow:var(--shadow-sm);
+  }
+  .char-body{
+    padding:20px;
+  }
+
+  .speech-bubble{
+    position:relative;
+    background:var(--plum-soft);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:11px 14px;
+    font-size:13px;
+    line-height:1.5;
+    margin-bottom:16px;
+    margin-top:12px;
+    text-align:left;
+    opacity:0;
+    transform:translateY(6px);
+    transition:all 0.35s ease;
+    min-height:20px;
+  }
+  .speech-bubble::before{
+    content:'';
+    position:absolute;
+    top:-12px;
+    left:28px;
+    width:0;
+    height:0;
+    border-left:9px solid transparent;
+    border-right:9px solid transparent;
+    border-bottom:12px solid var(--ink);
+  }
+  .speech-bubble::after{
+    content:'';
+    position:absolute;
+    top:-8.5px;
+    left:31px;
+    width:0;
+    height:0;
+    border-left:6px solid transparent;
+    border-right:6px solid transparent;
+    border-bottom:9px solid var(--plum-soft);
+  }
+  .speech-bubble.show{ opacity:1; transform:translateY(0); }
+  .speech-bubble.grumpy{ background:#F5D9D6; color:blue; }
+  .speech-bubble.grumpy::after{ border-bottom-color:#F5D9D6; }
+
+  .mood-badge{
+    position:absolute;
+    top:12px;
+    left:12px;
+    background:var(--red);
+    color:#fff;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:99px;
+    border:2px solid var(--ink);
+    box-shadow:var(--shadow-sm);
+  }
+  .mood-badge.hidden{ display:none; }
+  .char-visual.grumpy{ filter:saturate(0.75) contrast(1.05); }
+
+  .exp-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+  }
+  .exp-top .exp-label{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:14px;
+  }
+  .exp-top .exp-detail{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .exp-track{
+    height:16px;
+    background:var(--leaf-soft);
+    border:2px solid var(--ink);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .exp-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--leaf));
+    border-radius:99px 0 0 99px;
+    transition:width 0.6s cubic-bezier(.4,1.4,.5,1);
+  }
+
+  .task-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .task-row.done{ background:var(--leaf-soft); }
+  .task-info{ flex:1; }
+  .task-name{ font-size:13.5px; font-weight:700; }
+  .task-amount{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .task-btn{
+    border:2px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:12.5px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:var(--shadow-sm);
+  }
+  .task-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .task-btn.done{
+    background:var(--leaf);
+    color:#fff;
+    cursor:default;
+  }
+
+  .change-char-btn{
+    width:100%;
+    border:2px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:12px;
+    padding:12px;
+    font-size:13px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .change-char-btn.locked{
+    color:var(--ink-soft);
+    background:var(--bg);
+    border-color:var(--ink-soft);
+  }
+  .change-char-note{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+
+  .day-advance{
+    display:block;
+    width:100%;
+    text-align:center;
+    margin-top:6px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:inherit;
+    padding:6px;
+  }
+
+  /* ---------- 単元名の入力モーダル ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(34,26,18,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    z-index:50;
+  }
+  .modal-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    width:100%;
+    max-width:400px;
+    max-height:84vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .unit-name-list{
+    overflow-y:auto;
+    margin:6px -4px 10px;
+    padding:0 4px;
+  }
+  .unit-name-field{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .unit-no{
+    flex-shrink:0;
+    width:34px;
+    height:34px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-name-field input{
+    flex:1;
+    min-width:0;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 11px;
+    font-size:13px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+  }
+  .unit-name-field input:focus{ outline:none; background:#FFFDF9; }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-actions .primary-btn{ flex:1; }
+  .ghost-btn{
+    border:2.5px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:14px;
+    padding:14px 18px;
+    font-size:14px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    flex-shrink:0;
+  }
+  .ghost-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  .confirm-card{ max-width:340px; gap:14px; }
+  .confirm-card .card-title{ font-size:15px; line-height:1.5; margin:4px 0 8px; }
+
+  @media (min-width:760px){
+    .modal-card{ max-width:680px; }
+    .unit-name-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:10px 14px;
+    }
+    .unit-name-field{ margin-bottom:0; }
+  }
+
+  /* ---------- 画面B：単元カードのグリッド（横に段組み） ---------- */
+  .unit-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .unit-cell{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:12px;
+    min-height:132px;
+  }
+  .unit-cell.done{ background:var(--leaf-soft); }
+  .unit-cell.current{ background:var(--gold-soft); }
+  .unit-cell.locked{ opacity:0.5; }
+  .unit-cell .unit-no{
+    align-self:flex-start;
+    width:26px;
+    height:26px;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-cell.done .unit-no{ background:var(--leaf); color:#fff; }
+  .unit-cell .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .unit-cell .unit-nm{ font-size:13px; font-weight:700; word-break:break-word; line-height:1.35; }
+  .unit-cell .unit-range{ font-size:10.5px; color:var(--ink-soft); font-weight:500; }
+  .unit-cell .task-btn{ width:100%; padding:9px 8px; }
+  .unit-cell .task-btn[disabled]{
+    background:var(--bg);
+    color:var(--ink-soft);
+    border-color:var(--ink-soft);
+    box-shadow:none;
+    cursor:not-allowed;
+  }
+
+  /* 単元カード：チェック進捗 */
+  .unit-cell .unit-progress{ font-size:10.5px; color:var(--ink-soft); font-weight:700; }
+
+  /* 日ごとチェックリスト（モーダル） */
+  .check-card{ max-width:400px; }
+  .check-list{
+    overflow-y:auto;
+    margin:4px -4px 12px;
+    padding:0 4px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .check-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:100%;
+    border:2px solid var(--ink);
+    border-radius:12px;
+    background:var(--card-alt);
+    padding:11px 13px;
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--ink);
+    cursor:pointer;
+    text-align:left;
+  }
+  .check-item .check-box{
+    flex-shrink:0;
+    width:24px;
+    height:24px;
+    border:2px solid var(--ink);
+    border-radius:7px;
+    background:var(--card);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    color:#fff;
+  }
+  .check-item.checked{ background:var(--leaf-soft); }
+  .check-item.checked .check-box{ background:var(--leaf); }
+  .check-item.missed{ border-color:var(--red); color:var(--red); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tagline">続けるほど、育つ。</div>
+
+  <!-- ============ 画面A：はじめの設定 ============ -->
+  <div id="screenA">
+    <div class="card">
+      <div class="card-title">はじめに設定しよう</div>
+      <div class="card-desc">写真と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
+
+      <div class="upload-row">
+        <label class="upload-box" id="photoBox">
+          <span class="placeholder-content" id="photoPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5"/><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+            <span>写真を追加</span>
+          </span>
+          <input type="file" accept="image/*" id="photoInput">
+        </label>
+        <div class="upload-label">キャラクターにする写真を1枚選んでください</div>
+      </div>
+
+      <div class="field">
+        <label>どうやって日割りする？</label>
+        <div class="split-toggle" id="splitToggle">
+          <button type="button" data-mode="pages" class="active">ページで分ける</button>
+          <button type="button" data-mode="units">単元で分ける</button>
+        </div>
+        <div class="split-hint" id="splitHint">参考書の合計ページ数を、日数で等分して1日のノルマにします。</div>
+      </div>
+
+      <div class="field">
+        <label id="totalAmountLabel">本一冊の合計ページ数</label>
+        <div class="input-row">
+          <input type="number" id="totalAmountInput" min="1" placeholder="例）240">
+          <span class="unit" id="totalAmountUnit">ページ</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>何日で終わらせる？</label>
+        <div class="input-row">
+          <input type="number" id="totalDaysInput" min="1" placeholder="例）60">
+          <span class="unit">日</span>
+        </div>
+      </div>
+
+      <div class="form-error" id="formError"></div>
+
+      <button class="primary-btn" id="registerBtn">プロジェクトを登録する</button>
+    </div>
+  </div>
+
+  <!-- ============ 画面B：メイン画面 ============ -->
+  <div id="screenB" class="hidden">
+    <div class="card char-card">
+      <div class="char-visual" id="charVisual">
+        <div class="mood-badge hidden" id="moodBadge">😠 不機嫌</div>
+        <div class="level-pill" id="levelPill">Lv.1</div>
+      </div>
+      <div class="char-body">
+        <div class="speech-bubble" id="speechBubble"></div>
+
+        <div class="exp-top">
+          <span class="exp-label">EXP</span>
+          <span class="exp-detail" id="expDetail">Lv 1 / Lv50</span>
+        </div>
+        <div class="exp-track"><div class="exp-fill" id="expFill"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" id="taskCardTitle">今日のタスク</div>
+      <div class="card-desc" id="taskDesc"></div>
+
+      <div id="pagesTasks">
+        <div class="task-row" id="reviewRow">
+          <div class="task-info">
+            <div class="task-name">復習</div>
+            <div class="task-amount" id="reviewAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="reviewBtn">やった</button>
+        </div>
+
+        <div class="task-row" id="mainRow">
+          <div class="task-info">
+            <div class="task-name">本学習</div>
+            <div class="task-amount" id="mainAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="mainBtn">やった</button>
+        </div>
+      </div>
+
+      <div id="unitTasks" class="unit-grid hidden"></div>
+
+      <button class="change-char-btn" id="changeCharBtn">キャラクターを変える</button>
+      <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
+
+      <button class="day-advance" id="dayAdvanceBtn">（デモ用）翌日へ進める</button>
+    </div>
+  </div>
+
+  <!-- ============ 単元名の入力（モーダル） ============ -->
+  <div id="unitModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="card-title">単元の名前を入力</div>
+      <div class="card-desc">各単元に名前をつけましょう。番号の小さい順に取り組みます。空欄のままでもかまいません（「単元1」などになります）。</div>
+      <div class="unit-name-list" id="unitNameList"></div>
+      <div class="form-error" id="unitModalError"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="unitModalBack">もどる</button>
+        <button class="primary-btn" id="unitModalConfirm">この内容で始める</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 確認（モーダル） ============ -->
+  <div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal-card confirm-card">
+      <div class="card-title" id="confirmText">ほんまにやった？</div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="confirmNo">まだ</button>
+        <button class="primary-btn" id="confirmYes">やった！</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 単元の日ごとチェックリスト（モーダル） ============ -->
+  <div id="checkModal" class="modal-overlay hidden">
+    <div class="modal-card check-card">
+      <div class="card-title" id="checkModalTitle">単元</div>
+      <div class="card-desc" id="checkModalDesc">日ごとにチェックしよう。全部そろえると完了できます。</div>
+      <div class="check-list" id="checkList"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="checkModalClose">とじる</button>
+        <button class="primary-btn" id="checkModalDone" disabled>この単元を完了</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const TOTAL_XP = 5000;
+  const MAX_LEVEL = 50;
+  const XP_PER_LEVEL = TOTAL_XP / MAX_LEVEL; // 等分割り：1レベルあたり100
+  const DAILY_CHECK_XP = 30;   // 単元モード：1日1チェックで獲得するXP
+  const MISS_PENALTY_XP = 60;  // 単元モード：チェックし忘れた日ごとに減るXP
+
+  const MESSAGES = {
+    complete: [
+      'えらい、その調子！',
+      '今日もひとつ、前に進んだね。',
+      'コツコツって、実はいちばん強い。',
+      'よくやった。ちゃんと見てるよ。',
+    ],
+    levelUp: [
+      'なんだか体が軽い……成長した気がする！',
+      'レベルが上がった！ここまで続けてきた証だよ。',
+    ],
+    allDoneToday: '今日の分はおしまい。ゆっくり休んでね。',
+    changeCharBlocked: [
+      '逃げるな！まだLvMAXじゃないよ。',
+      'ここで諦めるの？まだ育ってる途中だよ。',
+      'Lv50になるまでは、私と一緒にいこう。',
+    ],
+    // ---- 不機嫌モード（経験値が減少した時に切り替わる）用のセリフ ----
+    dayMissedGrumpy: [
+      '{day}日目のチェックを忘れたでしょ…経験値が{xp}も下がったんだけど。',
+      'はぁ…{day}日目、サボったよね。経験値{xp}減ったの、わかってる？',
+      'また忘れたの？{day}日目。経験値{xp}下がったからね、もう。',
+    ],
+    dayOk: [
+      '{day}日目。今日の1チェック、わすれずに。',
+      '{day}日目スタート。今日もコツコツいこう。',
+    ],
+    changeCharBlockedGrumpy: [
+      'は？まだLvMAXじゃないのに逃げる気？',
+      'サボっといて変える気なの、それ。',
+      '経験値減らしといてよく言うよ。まずは取り返してから。',
+    ],
+  };
+
+  // 日割りの分け方。'pages'（ページ単位）／'units'（単元単位）
+  const SPLIT_MODES = {
+    pages: {
+      label: 'ページ',
+      fieldLabel: '本一冊の合計ページ数',
+      placeholder: '例）240',
+      hint: '参考書の合計ページ数を、日数で等分して1日のノルマにします。',
+    },
+    units: {
+      label: '単元',
+      fieldLabel: '本一冊の合計単元数',
+      placeholder: '例）12',
+      hint: '章・単元の数を、日数で等分して1日のノルマにします。ページ数がバラバラな参考書向け。',
+    },
+  };
+
+  let state = {
+    registered:false,
+    photo:null,
+    splitMode:'pages',
+    unitLabel:'ページ',
+    totalAmount:0,
+    totalDays:0,
+    reviewAmount:0,
+    mainAmount:0,
+    xpPerDay:0,
+    units:[],        // 単元モード用：[{ n, name, done }]
+    xpPerUnit:0,
+    daysPerUnit:0,   // 単元モード：1単元あたりの割り当て日数
+    checkedDays:[],  // 単元モード：チェック済みの日番号（1始まり）
+    xp:0,
+    reviewDoneToday:false,
+    mainDoneToday:false,
+    daysPassed:0,
+    grumpy:false,   // 不機嫌モード：経験値が減少すると true になる
+  };
+
+  const els = {
+    photoBox: document.getElementById('photoBox'),
+    photoInput: document.getElementById('photoInput'),
+    photoPlaceholder: document.getElementById('photoPlaceholder'),
+    splitToggle: document.getElementById('splitToggle'),
+    splitHint: document.getElementById('splitHint'),
+    totalAmountLabel: document.getElementById('totalAmountLabel'),
+    totalAmountInput: document.getElementById('totalAmountInput'),
+    totalAmountUnit: document.getElementById('totalAmountUnit'),
+    totalDaysInput: document.getElementById('totalDaysInput'),
+    formError: document.getElementById('formError'),
+    registerBtn: document.getElementById('registerBtn'),
+
+    unitModal: document.getElementById('unitModal'),
+    unitNameList: document.getElementById('unitNameList'),
+    unitModalError: document.getElementById('unitModalError'),
+    unitModalBack: document.getElementById('unitModalBack'),
+    unitModalConfirm: document.getElementById('unitModalConfirm'),
+
+    confirmModal: document.getElementById('confirmModal'),
+    confirmText: document.getElementById('confirmText'),
+    confirmYes: document.getElementById('confirmYes'),
+    confirmNo: document.getElementById('confirmNo'),
+
+    checkModal: document.getElementById('checkModal'),
+    checkModalTitle: document.getElementById('checkModalTitle'),
+    checkModalDesc: document.getElementById('checkModalDesc'),
+    checkList: document.getElementById('checkList'),
+    checkModalClose: document.getElementById('checkModalClose'),
+    checkModalDone: document.getElementById('checkModalDone'),
+
+    screenA: document.getElementById('screenA'),
+    screenB: document.getElementById('screenB'),
+
+    charVisual: document.getElementById('charVisual'),
+    moodBadge: document.getElementById('moodBadge'),
+    levelPill: document.getElementById('levelPill'),
+    speechBubble: document.getElementById('speechBubble'),
+    expDetail: document.getElementById('expDetail'),
+    expFill: document.getElementById('expFill'),
+
+    taskCardTitle: document.getElementById('taskCardTitle'),
+    taskDesc: document.getElementById('taskDesc'),
+    pagesTasks: document.getElementById('pagesTasks'),
+    unitTasks: document.getElementById('unitTasks'),
+    reviewRow: document.getElementById('reviewRow'),
+    reviewAmount: document.getElementById('reviewAmount'),
+    reviewBtn: document.getElementById('reviewBtn'),
+    mainRow: document.getElementById('mainRow'),
+    mainAmount: document.getElementById('mainAmount'),
+    mainBtn: document.getElementById('mainBtn'),
+
+    changeCharBtn: document.getElementById('changeCharBtn'),
+    changeCharNote: document.getElementById('changeCharNote'),
+    dayAdvanceBtn: document.getElementById('dayAdvanceBtn'),
+  };
+
+  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function currentLevel(){
+    return Math.min(MAX_LEVEL, Math.floor(state.xp / XP_PER_LEVEL) + 1);
+  }
+
+  // ---------- 経験値の増減はすべてここを通す（不機嫌モードの切り替えルールもここに集約） ----------
+  // 経験値が減少した→不機嫌モードON／経験値が増加した→不機嫌モードOFF
+  function changeXp(delta){
+    state.xp = Math.max(0, Math.min(TOTAL_XP, state.xp + delta));
+    if(delta < 0) state.grumpy = true;
+    else if(delta > 0) state.grumpy = false;
+  }
+
+  // ---------- 確認モーダル（ネイティブconfirmの代わり） ----------
+  let confirmResolver = null;
+  function askConfirm(message){
+    els.confirmText.textContent = message;
+    els.confirmModal.classList.remove('hidden');
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function closeConfirm(result){
+    els.confirmModal.classList.add('hidden');
+    const resolve = confirmResolver;
+    confirmResolver = null;
+    if(resolve) resolve(result);
+  }
+  els.confirmYes.addEventListener('click', () => closeConfirm(true));
+  els.confirmNo.addEventListener('click', () => closeConfirm(false));
+  els.confirmModal.addEventListener('click', e => {
+    if(e.target === els.confirmModal) closeConfirm(false);
+  });
+
+  // ---------- 画像アップロード ----------
+  function bindUpload(box, input, placeholder, onLoaded){
+    input.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        let img = box.querySelector('img');
+        if(!img){
+          img = document.createElement('img');
+          if(placeholder) placeholder.remove();
+          box.appendChild(img);
+        }
+        img.src = ev.target.result;
+        onLoaded(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  bindUpload(els.photoBox, els.photoInput, els.photoPlaceholder, (src) => { state.photo = src; });
+
+  // ---------- 画面A：分け方の切り替え ----------
+  function applySplitMode(mode){
+    if(!SPLIT_MODES[mode]) mode = 'pages';
+    state.splitMode = mode;
+    state.unitLabel = SPLIT_MODES[mode].label;
+
+    els.splitToggle.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    els.totalAmountLabel.textContent = SPLIT_MODES[mode].fieldLabel;
+    els.totalAmountInput.placeholder = SPLIT_MODES[mode].placeholder;
+    els.totalAmountUnit.textContent = SPLIT_MODES[mode].label;
+    els.splitHint.textContent = SPLIT_MODES[mode].hint;
+  }
+  els.splitToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if(!btn) return;
+    applySplitMode(btn.dataset.mode);
+  });
+  applySplitMode(state.splitMode);
+
+  // ---------- 画面A：登録 ----------
+  const MAX_UNITS = 100;
+
+  els.registerBtn.addEventListener('click', () => {
+    const totalAmount = parseInt(els.totalAmountInput.value, 10);
+    const totalDays = parseInt(els.totalDaysInput.value, 10);
+    const unit = state.unitLabel;
+
+    if(!totalAmount || totalAmount < 1){
+      els.formError.textContent = '合計' + unit + '数を正しく入力してください。';
+      return;
+    }
+    if(state.splitMode === 'units' && totalAmount > MAX_UNITS){
+      els.formError.textContent = '単元数は' + MAX_UNITS + '以下で入力してください。';
+      return;
+    }
+    if(!totalDays || totalDays < 1){
+      els.formError.textContent = '日数を正しく入力してください。';
+      return;
+    }
+    els.formError.textContent = '';
+
+    state.registered = true;
+    state.totalAmount = totalAmount;
+    state.totalDays = totalDays;
+
+    if(state.splitMode === 'units'){
+      openUnitModal(totalAmount);
+      return;
+    }
+
+    const amountPerDay = Math.ceil(totalAmount / totalDays);
+    state.mainAmount = amountPerDay;
+    state.reviewAmount = Math.max(1, Math.round(amountPerDay * 0.3));
+    state.xpPerDay = TOTAL_XP / totalDays;
+
+    goToScreenB('ここから始めよう。今日のタスクを見てみて。');
+  });
+
+  function goToScreenB(message){
+    renderScreenB();
+    els.screenA.classList.add('hidden');
+    els.screenB.classList.remove('hidden');
+    document.body.classList.add('screen-b');
+    if(message) showSpeech(message);
+  }
+
+  // ---------- 画面A：単元名の入力モーダル ----------
+  function openUnitModal(count){
+    els.unitNameList.innerHTML = '';
+    for(let i = 1; i <= count; i++){
+      const prev = state.units.find(u => u.n === i);
+      const field = document.createElement('label');
+      field.className = 'unit-name-field';
+      field.innerHTML =
+        '<span class="unit-no">' + i + '</span>' +
+        '<input type="text" maxlength="30" placeholder="単元' + i + '（例：三角関数）">';
+      if(prev && prev.name && prev.name !== ('単元' + i)){
+        field.querySelector('input').value = prev.name;
+      }
+      els.unitNameList.appendChild(field);
+    }
+    els.unitModalError.textContent = '';
+    els.unitModal.classList.remove('hidden');
+    const first = els.unitNameList.querySelector('input');
+    if(first) first.focus();
+  }
+
+  function closeUnitModal(){
+    els.unitModal.classList.add('hidden');
+  }
+
+  els.unitModalBack.addEventListener('click', closeUnitModal);
+
+  els.unitModalConfirm.addEventListener('click', () => {
+    const inputs = [...els.unitNameList.querySelectorAll('input')];
+    state.units = inputs.map((inp, idx) => {
+      const n = idx + 1;
+      return { n, name: inp.value.trim() || ('単元' + n), done:false };
+    });
+    state.xpPerUnit = TOTAL_XP / state.units.length;
+    state.daysPerUnit = Math.max(1, Math.round(state.totalDays / state.units.length));
+    state.daysPassed = 0;
+    state.checkedDays = [];
+    closeUnitModal();
+    goToScreenB('単元を' + state.units.length + '個登録したよ。毎日1チェック、わすれずにね。');
+  });
+
+  // ---------- 画面B：描画 ----------
+  function renderScreenB(){
+    els.charVisual.style.backgroundImage = state.photo ? `url(${state.photo})` : '';
+    els.charVisual.classList.toggle('grumpy', state.grumpy);
+    els.moodBadge.classList.toggle('hidden', !state.grumpy);
+    els.speechBubble.classList.toggle('grumpy', state.grumpy);
+
+    const level = currentLevel();
+    els.levelPill.textContent = 'Lv.' + level;
+
+    const xpIntoLevel = state.xp % XP_PER_LEVEL;
+    const pct = level >= MAX_LEVEL ? 100 : (xpIntoLevel / XP_PER_LEVEL) * 100;
+    els.expFill.style.width = pct + '%';
+    els.expDetail.textContent = 'Lv ' + level + ' / Lv' + MAX_LEVEL;
+
+    const isUnits = state.splitMode === 'units';
+    const allUnitsDone = isUnits && state.units.length > 0 && state.units.every(u => u.done);
+    els.pagesTasks.classList.toggle('hidden', isUnits);
+    els.unitTasks.classList.toggle('hidden', !isUnits);
+    // 単元モードでも日を進めるボタンを表示（全単元クリア後は隠す）
+    els.dayAdvanceBtn.classList.toggle('hidden', isUnits && allUnitsDone);
+
+    if(isUnits){
+      const doneCount = state.units.filter(u => u.done).length;
+      els.taskCardTitle.textContent = '単元リスト';
+      els.taskDesc.textContent =
+        '全' + state.units.length + '単元（' + doneCount + '／' + state.units.length + ' 完了）。' +
+        (allUnitsDone
+          ? 'すべて終わりました！'
+          : '毎日1チェックしないと経験値が下がります。前の単元を終わらせると次が解放。');
+      renderUnitTasks();
+    } else {
+      els.taskCardTitle.textContent = '今日のタスク';
+      els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。'
+        + '復習・本学習の両方を終えないと、翌日へ進めた時に経験値が下がります。';
+      els.reviewAmount.textContent = state.reviewAmount + ' ' + state.unitLabel;
+      els.mainAmount.textContent = state.mainAmount + ' ' + state.unitLabel;
+      updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
+      updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+    }
+
+    const maxed = level >= MAX_LEVEL;
+    els.changeCharBtn.classList.toggle('locked', !maxed);
+    els.changeCharNote.textContent = maxed
+      ? 'Lv50に到達しました。キャラクターを変更できます。'
+      : 'Lv50に到達すると、キャラクターを変更できます（現在 Lv' + level + '）';
+  }
+
+  function updateTaskRow(row, btn, done){
+    row.classList.toggle('done', done);
+    btn.classList.toggle('done', done);
+    btn.textContent = done ? 'やった✓' : 'やった';
+  }
+
+  function showSpeech(text){
+    els.speechBubble.textContent = text;
+    els.speechBubble.classList.remove('show');
+    void els.speechBubble.offsetWidth;
+    els.speechBubble.classList.add('show');
+  }
+
+  async function completeTask(kind){
+    const alreadyDone = kind === 'review' ? state.reviewDoneToday : state.mainDoneToday;
+    if(alreadyDone) return;
+
+    const ok = await askConfirm('ほんまにやった？');
+    if(!ok) return;
+
+    const prevLevel = currentLevel();
+    const xpGain = state.xpPerDay / 2; // 復習・本学習で1日分のXPを折半
+    changeXp(xpGain);
+
+    if(kind === 'review') state.reviewDoneToday = true;
+    else state.mainDoneToday = true;
+
+    renderScreenB();
+
+    const newLevel = currentLevel();
+    if(newLevel > prevLevel){
+      showSpeech(randomFrom(MESSAGES.levelUp));
+    } else if(state.reviewDoneToday && state.mainDoneToday){
+      showSpeech(MESSAGES.allDoneToday);
+    } else {
+      showSpeech(randomFrom(MESSAGES.complete));
+    }
+  }
+
+  els.reviewBtn.addEventListener('click', () => completeTask('review'));
+  els.mainBtn.addEventListener('click', () => completeTask('main'));
+
+  // ---------- 画面B：単元リスト（全表示・前の単元をクリアで解放） ----------
+  function unitStartDay(n){ return (n - 1) * state.daysPerUnit + 1; }
+  function unitEndDay(n){
+    const raw = n === state.units.length ? state.totalDays : n * state.daysPerUnit;
+    return Math.max(raw, unitStartDay(n));
+  }
+  // n番目の単元が解放済みか＝1番目、または直前の単元が完了している
+  function isUnitUnlocked(n){
+    if(n <= 1) return true;
+    const prev = state.units.find(u => u.n === n - 1);
+    return !!(prev && prev.done);
+  }
+
+  const curDay = () => state.daysPassed + 1;
+  const dayChecked = (d) => state.checkedDays.indexOf(d) !== -1;
+  const currentUnit = () => state.units.find(u => !u.done && isUnitUnlocked(u.n)) || null;
+  // 取り組み中の単元は、経過した日数ぶんまでチェック対象を広げる（今日を必ずチェックできるように）
+  function unitLastDay(n){
+    const u = state.units.find(x => x.n === n);
+    const base = unitEndDay(n);
+    if(u && !u.done && isUnitUnlocked(n)) return Math.max(base, curDay());
+    return base;
+  }
+  const unitDayCount = (n) => unitLastDay(n) - unitStartDay(n) + 1;
+  function unitCheckedCount(n){
+    let c = 0;
+    for(let d = unitStartDay(n); d <= unitLastDay(n); d++) if(dayChecked(d)) c++;
+    return c;
+  }
+  const unitAllChecked = (n) => unitCheckedCount(n) >= unitDayCount(n);
+
+  function renderUnitTasks(){
+    els.unitTasks.innerHTML = '';
+    const sorted = [...state.units].sort((a, b) => a.n - b.n);
+    sorted.forEach(u => {
+      const unlocked = isUnitUnlocked(u.n);
+      const locked = !u.done && !unlocked;
+      const current = !u.done && unlocked;
+      const cell = document.createElement('div');
+      cell.className = 'unit-cell' + (u.done ? ' done' : '') + (locked ? ' locked' : '') + (current ? ' current' : '');
+      const btnText = u.done ? 'やった✓' : (locked ? '🔒' : 'やった');
+      cell.innerHTML =
+        '<span class="unit-no">' + u.n + '</span>' +
+        '<span class="unit-info">' +
+          '<span class="unit-nm"></span>' +
+          '<span class="unit-range">目安 ' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目</span>' +
+          '<span class="unit-progress">チェック ' + unitCheckedCount(u.n) + ' / ' + unitDayCount(u.n) + '</span>' +
+        '</span>' +
+        '<button class="task-btn' + (u.done ? ' done' : '') + '"' + (locked ? ' disabled' : '') + '>' + btnText + '</button>';
+      cell.querySelector('.unit-nm').textContent = u.name;
+      if(!u.done && !locked){
+        cell.querySelector('.task-btn').addEventListener('click', () => openCheckModal(u.n));
+      }
+      els.unitTasks.appendChild(cell);
+    });
+  }
+
+  // ---------- 日ごとのチェックリスト（モーダル） ----------
+  let checkModalUnit = null;
+
+  function openCheckModal(n){
+    const u = state.units.find(x => x.n === n);
+    if(!u || u.done || !isUnitUnlocked(n)) return;
+    checkModalUnit = n;
+    els.checkModalTitle.textContent = u.name;
+    renderCheckList();
+    els.checkModal.classList.remove('hidden');
+  }
+  function closeCheckModal(){
+    els.checkModal.classList.add('hidden');
+    checkModalUnit = null;
+  }
+  function renderCheckList(){
+    const u = state.units.find(x => x.n === checkModalUnit);
+    if(!u) return;
+    els.checkList.innerHTML = '';
+    for(let d = unitStartDay(u.n); d <= unitLastDay(u.n); d++){
+      const checked = dayChecked(d);
+      const missed = !checked && d < curDay();
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'check-item' + (checked ? ' checked' : '') + (missed ? ' missed' : '');
+      item.dataset.day = d;
+      item.innerHTML =
+        '<span class="check-box">' + (checked ? '✓' : '') + '</span>' +
+        '<span class="check-label">' + d + '日目' + (missed ? '（記録わすれ）' : '') + '</span>';
+      item.addEventListener('click', () => toggleCheck(d));
+      els.checkList.appendChild(item);
+    }
+    const all = unitAllChecked(u.n);
+    els.checkModalDone.disabled = !all;
+    els.checkModalDesc.textContent = all
+      ? '全部チェック！「この単元を完了」で次の単元に進めます。'
+      : '日ごとにチェックしよう。全部そろえると完了できます（' + unitCheckedCount(u.n) + ' / ' + unitDayCount(u.n) + '）。';
+  }
+  function toggleCheck(d){
+    const i = state.checkedDays.indexOf(d);
+    if(i === -1){
+      state.checkedDays.push(d);
+      changeXp(DAILY_CHECK_XP);
+    } else {
+      state.checkedDays.splice(i, 1);
+      changeXp(-DAILY_CHECK_XP);
+    }
+    renderCheckList();
+    renderScreenB();
+  }
+  function finishUnitFromModal(){
+    const n = checkModalUnit;
+    const u = state.units.find(x => x.n === n);
+    if(!u || u.done || !unitAllChecked(n)) return;
+
+    const prevLevel = currentLevel();
+    changeXp(state.xpPerUnit);
+    u.done = true;
+    // 次の単元は予定の開始日から
+    state.daysPassed = Math.max(state.daysPassed, unitEndDay(n));
+
+    closeCheckModal();
+    renderScreenB();
+
+    if(state.units.every(x => x.done)){
+      showSpeech('全単元クリア！ここまで走りきったの、本当にすごいよ。');
+    } else if(currentLevel() > prevLevel){
+      showSpeech(randomFrom(MESSAGES.levelUp));
+    } else {
+      showSpeech(randomFrom(MESSAGES.complete));
+    }
+  }
+  els.checkModalClose.addEventListener('click', closeCheckModal);
+  els.checkModalDone.addEventListener('click', finishUnitFromModal);
+  els.checkModal.addEventListener('click', e => {
+    if(e.target === els.checkModal) closeCheckModal();
+  });
+
+  els.changeCharBtn.addEventListener('click', () => {
+    const maxed = currentLevel() >= MAX_LEVEL;
+
+    if(!maxed){
+      showSpeech(randomFrom(state.grumpy ? MESSAGES.changeCharBlockedGrumpy : MESSAGES.changeCharBlocked));
+      return;
+    }
+
+    els.screenB.classList.add('hidden');
+    els.screenA.classList.remove('hidden');
+    document.body.classList.remove('screen-b');
+  });
+
+  els.dayAdvanceBtn.addEventListener('click', () => {
+    if(state.splitMode === 'units'){
+      const cu = currentUnit();
+      if(!cu){ showSpeech('全単元クリア済み。ゆっくり休んでね。'); return; }
+      // 1日経過。去る日のチェックボックスにタスクが入っていなければ、経験値が減って不機嫌モードに切り替わる
+      const leaving = curDay();
+      const penalized = !dayChecked(leaving);
+      if(penalized) changeXp(-MISS_PENALTY_XP);
+      state.daysPassed += 1;
+      renderScreenB();
+      showSpeech(penalized
+        ? randomFrom(MESSAGES.dayMissedGrumpy)
+            .replace('{day}', leaving)
+            .replace('{xp}', MISS_PENALTY_XP)
+        : randomFrom(MESSAGES.dayOk).replace('{day}', curDay()));
+      return;
+    }
+
+    // ページで分けたモードも、単元モードとまったく同じルール：
+    // その日のタスク（復習・本学習）が両方チェックされていなければ、経験値が減って不機嫌モードに切り替わる
+    const leavingDay = curDay();
+    const penalizedPages = !(state.reviewDoneToday && state.mainDoneToday);
+    if(penalizedPages) changeXp(-MISS_PENALTY_XP);
+    state.daysPassed += 1;
+    state.reviewDoneToday = false;
+    state.mainDoneToday = false;
+    renderScreenB();
+    showSpeech(penalizedPages
+      ? randomFrom(MESSAGES.dayMissedGrumpy)
+          .replace('{day}', leavingDay)
+          .replace('{xp}', MISS_PENALTY_XP)
+      : randomFrom(MESSAGES.dayOk).replace('{day}', curDay()));
+  });
+})();
+</script>
+</body>
+</html>

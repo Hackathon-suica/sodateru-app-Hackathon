@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ぐんぐんそだてよう｜学習育成ノート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F0DCC4;
+    --card:#FBF3E5;
+    --card-alt:#FFFFFF;
+    --ink:#221A12;
+    --ink-soft:#7A6E5C;
+    --leaf:#4F7B5B;
+    --leaf-soft:#DCE8D0;
+    --gold:#D9A73D;
+    --gold-soft:#F3E3B8;
+    --red:#D6524A;
+    --green-btn:#3E7A52;
+    --plum-soft:#F0DCE3;
+    --line:2.5px solid var(--ink);
+    --shadow:4px 4px 0 var(--ink);
+    --shadow-sm:3px 3px 0 var(--ink);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 16px 60px;
+  }
+  .app{ width:100%; max-width:440px; }
+  .hidden{ display:none !important; }
+
+  .tagline{
+    text-align:center;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:17px;
+    color:var(--leaf);
+    letter-spacing:0.04em;
+    margin:2px 0 20px;
+  }
+
+  .card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card-title{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:16px;
+    margin:0 0 4px;
+  }
+  .card-desc{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.6;
+  }
+
+  /* ---------- Screen A: setup ---------- */
+  .upload-row{
+    display:flex;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .upload-box{
+    flex:1;
+    aspect-ratio:1;
+    border:3px solid var(--ink);
+    border-radius:16px;
+    background:var(--card-alt);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    cursor:pointer;
+    overflow:hidden;
+    position:relative;
+  }
+  .upload-box img{ width:100%;height:100%;object-fit:cover; }
+  .upload-box svg{ width:28px;height:28px; }
+  .upload-box span{ font-size:12px; font-weight:700; }
+  .upload-box input{ display:none; }
+  .upload-label{
+    text-align:center;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .field .input-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .field input[type="number"]{
+    flex:1;
+    border:2px solid var(--ink);
+    border-radius:12px;
+    padding:11px 13px;
+    font-size:14px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+    width:100%;
+  }
+  .field input:focus{ outline:none; background:#FFFDF9; }
+  .field .unit{ font-size:13px; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+
+  .primary-btn{
+    width:100%;
+    border:2.5px solid var(--ink);
+    background:var(--green-btn);
+    color:#fff;
+    border-radius:14px;
+    padding:14px;
+    font-size:15px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:transform 0.1s;
+  }
+  .primary-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .primary-btn:disabled{
+    background:#C9BFA9;
+    cursor:not-allowed;
+    box-shadow:none;
+  }
+
+  .form-error{
+    font-size:12px;
+    color:var(--red);
+    font-weight:700;
+    margin:-6px 0 12px;
+    min-height:16px;
+  }
+
+  /* ---------- Screen B: main ---------- */
+  .char-card{
+    text-align:center;
+    padding:0;
+    overflow:hidden;
+  }
+  .char-visual{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/11;
+    background:linear-gradient(160deg,var(--leaf-soft),var(--gold-soft));
+    background-size:cover;
+    background-position:center;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    border-bottom:var(--line);
+  }
+  .char-photo{
+    width:118px;height:118px;
+    border-radius:50%;
+    border:3px solid var(--ink);
+    background:var(--card-alt);
+    object-fit:cover;
+    margin-bottom:-38px;
+    box-shadow:var(--shadow-sm);
+  }
+  .level-pill{
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:var(--red);
+    color:#fff;
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:13px;
+    padding:5px 12px;
+    border-radius:99px;
+    border:2px solid var(--ink);
+    box-shadow:var(--shadow-sm);
+  }
+  .char-body{
+    padding:46px 20px 20px;
+  }
+
+  .speech-bubble{
+    background:var(--plum-soft);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:11px 14px;
+    font-size:13px;
+    line-height:1.5;
+    margin-bottom:16px;
+    text-align:left;
+    opacity:0;
+    transform:translateY(6px);
+    transition:all 0.35s ease;
+    min-height:20px;
+  }
+  .speech-bubble.show{ opacity:1; transform:translateY(0); }
+
+  .exp-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+  }
+  .exp-top .exp-label{
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:14px;
+  }
+  .exp-top .exp-detail{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .exp-track{
+    height:16px;
+    background:var(--leaf-soft);
+    border:2px solid var(--ink);
+    border-radius:99px;
+    overflow:hidden;
+  }
+  .exp-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--gold),var(--leaf));
+    border-radius:99px 0 0 99px;
+    transition:width 0.6s cubic-bezier(.4,1.4,.5,1);
+  }
+
+  .task-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .task-row.done{ background:var(--leaf-soft); }
+  .task-info{ flex:1; }
+  .task-name{ font-size:13.5px; font-weight:700; }
+  .task-amount{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .task-btn{
+    border:2px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:10px;
+    padding:9px 16px;
+    font-size:12.5px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    flex-shrink:0;
+    box-shadow:var(--shadow-sm);
+  }
+  .task-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+  .task-btn.done{
+    background:var(--leaf);
+    color:#fff;
+    cursor:default;
+  }
+
+  .change-char-btn{
+    width:100%;
+    border:2px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:12px;
+    padding:12px;
+    font-size:13px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .change-char-btn:disabled{
+    color:var(--ink-soft);
+    background:var(--bg);
+    cursor:not-allowed;
+    border-color:var(--ink-soft);
+  }
+  .change-char-note{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:8px;
+  }
+
+  .day-advance{
+    display:block;
+    width:100%;
+    text-align:center;
+    margin-top:6px;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    background:none;
+    border:none;
+    font-family:inherit;
+    padding:6px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tagline">続けるほど、育つ。</div>
+
+  <!-- ============ 画面A：はじめの設定 ============ -->
+  <div id="screenA">
+    <div class="card">
+      <div class="card-title">はじめに設定しよう</div>
+      <div class="card-desc">写真・背景と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
+
+      <div class="upload-row">
+        <div>
+          <label class="upload-box" id="faceBox">
+            <span class="placeholder-content" id="facePlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+              <span>顔・写真</span>
+            </span>
+            <input type="file" accept="image/*" id="faceInput">
+          </label>
+          <div class="upload-label">顔追加</div>
+        </div>
+        <div>
+          <label class="upload-box" id="bgBox">
+            <span class="placeholder-content" id="bgPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5" /><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+              <span>背景</span>
+            </span>
+            <input type="file" accept="image/*" id="bgInput">
+          </label>
+          <div class="upload-label">背景追加</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>本一冊の合計ページ数</label>
+        <div class="input-row">
+          <input type="number" id="totalPagesInput" min="1" placeholder="例）240">
+          <span class="unit">ページ</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>何日で終わらせる？</label>
+        <div class="input-row">
+          <input type="number" id="totalDaysInput" min="1" placeholder="例）60">
+          <span class="unit">日</span>
+        </div>
+      </div>
+
+      <div class="form-error" id="formError"></div>
+
+      <button class="primary-btn" id="registerBtn">プロジェクトを登録する</button>
+    </div>
+  </div>
+
+  <!-- ============ 画面B：メイン画面 ============ -->
+  <div id="screenB" class="hidden">
+    <div class="card char-card">
+      <div class="char-visual" id="charVisual">
+        <div class="level-pill" id="levelPill">Lv.1</div>
+        <img class="char-photo" id="charPhoto" src="" alt="キャラクター">
+      </div>
+      <div class="char-body">
+        <div class="speech-bubble" id="speechBubble"></div>
+
+        <div class="exp-top">
+          <span class="exp-label">EXP</span>
+          <span class="exp-detail" id="expDetail">Lv 1 / Lv50</span>
+        </div>
+        <div class="exp-track"><div class="exp-fill" id="expFill"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">今日のタスク</div>
+      <div class="card-desc" id="taskDesc"></div>
+
+      <div class="task-row" id="reviewRow">
+        <div class="task-info">
+          <div class="task-name">復習</div>
+          <div class="task-amount" id="reviewAmount">0 ページ</div>
+        </div>
+        <button class="task-btn" id="reviewBtn">やった</button>
+      </div>
+
+      <div class="task-row" id="mainRow">
+        <div class="task-info">
+          <div class="task-name">本学習</div>
+          <div class="task-amount" id="mainAmount">0 ページ</div>
+        </div>
+        <button class="task-btn" id="mainBtn">やった</button>
+      </div>
+
+      <button class="change-char-btn" id="changeCharBtn" disabled>キャラクターを変える</button>
+      <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
+
+      <button class="day-advance" id="dayAdvanceBtn">（デモ用）翌日へ進める</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const TOTAL_XP = 5000;
+  const MAX_LEVEL = 50;
+  const XP_PER_LEVEL = TOTAL_XP / MAX_LEVEL; // 等分割り：1レベルあたり100
+
+  const MESSAGES = {
+    complete: [
+      'えらい、その調子！',
+      '今日もひとつ、前に進んだね。',
+      'コツコツって、実はいちばん強い。',
+      'よくやった。ちゃんと見てるよ。',
+    ],
+    levelUp: [
+      'なんだか体が軽い……成長した気がする！',
+      'レベルが上がった！ここまで続けてきた証だよ。',
+    ],
+    allDoneToday: '今日の分はおしまい。ゆっくり休んでね。',
+  };
+
+  let state = {
+    registered:false,
+    facePhoto:null,
+    bgPhoto:null,
+    totalPages:0,
+    totalDays:0,
+    reviewPages:0,
+    mainPages:0,
+    xpPerDay:0,
+    xp:0,
+    reviewDoneToday:false,
+    mainDoneToday:false,
+    daysPassed:0,
+  };
+
+  const els = {
+    faceBox: document.getElementById('faceBox'),
+    faceInput: document.getElementById('faceInput'),
+    facePlaceholder: document.getElementById('facePlaceholder'),
+    bgBox: document.getElementById('bgBox'),
+    bgInput: document.getElementById('bgInput'),
+    bgPlaceholder: document.getElementById('bgPlaceholder'),
+    totalPagesInput: document.getElementById('totalPagesInput'),
+    totalDaysInput: document.getElementById('totalDaysInput'),
+    formError: document.getElementById('formError'),
+    registerBtn: document.getElementById('registerBtn'),
+
+    screenA: document.getElementById('screenA'),
+    screenB: document.getElementById('screenB'),
+
+    charVisual: document.getElementById('charVisual'),
+    charPhoto: document.getElementById('charPhoto'),
+    levelPill: document.getElementById('levelPill'),
+    speechBubble: document.getElementById('speechBubble'),
+    expDetail: document.getElementById('expDetail'),
+    expFill: document.getElementById('expFill'),
+
+    taskDesc: document.getElementById('taskDesc'),
+    reviewRow: document.getElementById('reviewRow'),
+    reviewAmount: document.getElementById('reviewAmount'),
+    reviewBtn: document.getElementById('reviewBtn'),
+    mainRow: document.getElementById('mainRow'),
+    mainAmount: document.getElementById('mainAmount'),
+    mainBtn: document.getElementById('mainBtn'),
+
+    changeCharBtn: document.getElementById('changeCharBtn'),
+    changeCharNote: document.getElementById('changeCharNote'),
+    dayAdvanceBtn: document.getElementById('dayAdvanceBtn'),
+  };
+
+  function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function currentLevel(){
+    return Math.min(MAX_LEVEL, Math.floor(state.xp / XP_PER_LEVEL) + 1);
+  }
+
+  // ---------- 画像アップロード ----------
+  function bindUpload(box, input, placeholder, onLoaded){
+    input.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        let img = box.querySelector('img');
+        if(!img){
+          img = document.createElement('img');
+          if(placeholder) placeholder.remove();
+          box.appendChild(img);
+        }
+        img.src = ev.target.result;
+        onLoaded(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  bindUpload(els.faceBox, els.faceInput, els.facePlaceholder, (src) => { state.facePhoto = src; });
+  bindUpload(els.bgBox, els.bgInput, els.bgPlaceholder, (src) => { state.bgPhoto = src; });
+
+  // ---------- 画面A：登録 ----------
+  els.registerBtn.addEventListener('click', () => {
+    const totalPages = parseInt(els.totalPagesInput.value, 10);
+    const totalDays = parseInt(els.totalDaysInput.value, 10);
+
+    if(!totalPages || totalPages < 1){
+      els.formError.textContent = '合計ページ数を正しく入力してください。';
+      return;
+    }
+    if(!totalDays || totalDays < 1){
+      els.formError.textContent = '日数を正しく入力してください。';
+      return;
+    }
+    els.formError.textContent = '';
+
+    state.registered = true;
+    state.totalPages = totalPages;
+    state.totalDays = totalDays;
+
+    const pagesPerDay = Math.ceil(totalPages / totalDays);
+    state.mainPages = pagesPerDay;
+    state.reviewPages = Math.max(1, Math.round(pagesPerDay * 0.3));
+    state.xpPerDay = TOTAL_XP / totalDays;
+
+    renderScreenB();
+    els.screenA.classList.add('hidden');
+    els.screenB.classList.remove('hidden');
+    showSpeech('ここから始めよう。今日のタスクを見てみて。');
+  });
+
+  // ---------- 画面B：描画 ----------
+  function renderScreenB(){
+    els.charPhoto.src = state.facePhoto || '';
+    els.charPhoto.style.visibility = state.facePhoto ? 'visible' : 'hidden';
+    els.charVisual.style.backgroundImage = state.bgPhoto ? `url(${state.bgPhoto})` : '';
+
+    const level = currentLevel();
+    els.levelPill.textContent = 'Lv.' + level;
+
+    const xpIntoLevel = state.xp % XP_PER_LEVEL;
+    const pct = level >= MAX_LEVEL ? 100 : (xpIntoLevel / XP_PER_LEVEL) * 100;
+    els.expFill.style.width = pct + '%';
+    els.expDetail.textContent = 'Lv ' + level + ' / Lv' + MAX_LEVEL;
+
+    els.taskDesc.textContent = '本一冊 ' + state.totalPages + 'ページを ' + state.totalDays + '日で終える設定です。';
+
+    els.reviewAmount.textContent = state.reviewPages + ' ページ';
+    els.mainAmount.textContent = state.mainPages + ' ページ';
+
+    updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
+    updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+
+    const maxed = level >= MAX_LEVEL;
+    els.changeCharBtn.disabled = !maxed;
+    els.changeCharNote.textContent = maxed
+      ? 'Lv50に到達しました。キャラクターを変更できます。'
+      : 'Lv50に到達すると、キャラクターを変更できます（現在 Lv' + level + '）';
+  }
+
+  function updateTaskRow(row, btn, done){
+    row.classList.toggle('done', done);
+    btn.classList.toggle('done', done);
+    btn.textContent = done ? 'やった✓' : 'やった';
+  }
+
+  function showSpeech(text){
+    els.speechBubble.textContent = text;
+    els.speechBubble.classList.remove('show');
+    void els.speechBubble.offsetWidth;
+    els.speechBubble.classList.add('show');
+  }
+
+  function completeTask(kind){
+    const alreadyDone = kind === 'review' ? state.reviewDoneToday : state.mainDoneToday;
+    if(alreadyDone) return;
+
+    const ok = confirm('ほんまにやった？');
+    if(!ok) return;
+
+    const prevLevel = currentLevel();
+    const xpGain = state.xpPerDay / 2; // 復習・本学習で1日分のXPを折半
+    state.xp = Math.min(TOTAL_XP, state.xp + xpGain);
+
+    if(kind === 'review') state.reviewDoneToday = true;
+    else state.mainDoneToday = true;
+
+    renderScreenB();
+
+    const newLevel = currentLevel();
+    if(newLevel > prevLevel){
+      showSpeech(randomFrom(MESSAGES.levelUp));
+    } else if(state.reviewDoneToday && state.mainDoneToday){
+      showSpeech(MESSAGES.allDoneToday);
+    } else {
+      showSpeech(randomFrom(MESSAGES.complete));
+    }
+  }
+
+  els.reviewBtn.addEventListener('click', () => completeTask('review'));
+  els.mainBtn.addEventListener('click', () => completeTask('main'));
+
+  els.changeCharBtn.addEventListener('click', () => {
+    if(els.changeCharBtn.disabled) return;
+    els.screenB.classList.add('hidden');
+    els.screenA.classList.remove('hidden');
+  });
+
+  els.dayAdvanceBtn.addEventListener('click', () => {
+    state.daysPassed += 1;
+    state.reviewDoneToday = false;
+    state.mainDoneToday = false;
+    renderScreenB();
+    showSpeech('新しい日が始まった。今日も一歩ずつ。');
+  });
+})();
+</script>
+</body>
+</html>
