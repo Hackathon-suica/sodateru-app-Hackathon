@@ -1088,10 +1088,17 @@
   const curDay = () => state.daysPassed + 1;
   const dayChecked = (d) => state.checkedDays.indexOf(d) !== -1;
   const currentUnit = () => state.units.find(u => !u.done && isUnitUnlocked(u.n)) || null;
-  const unitDayCount = (n) => unitEndDay(n) - unitStartDay(n) + 1;
+  // 取り組み中の単元は、経過した日数ぶんまでチェック対象を広げる（今日を必ずチェックできるように）
+  function unitLastDay(n){
+    const u = state.units.find(x => x.n === n);
+    const base = unitEndDay(n);
+    if(u && !u.done && isUnitUnlocked(n)) return Math.max(base, curDay());
+    return base;
+  }
+  const unitDayCount = (n) => unitLastDay(n) - unitStartDay(n) + 1;
   function unitCheckedCount(n){
     let c = 0;
-    for(let d = unitStartDay(n); d <= unitEndDay(n); d++) if(dayChecked(d)) c++;
+    for(let d = unitStartDay(n); d <= unitLastDay(n); d++) if(dayChecked(d)) c++;
     return c;
   }
   const unitAllChecked = (n) => unitCheckedCount(n) >= unitDayCount(n);
@@ -1141,7 +1148,7 @@
     const u = state.units.find(x => x.n === checkModalUnit);
     if(!u) return;
     els.checkList.innerHTML = '';
-    for(let d = unitStartDay(u.n); d <= unitEndDay(u.n); d++){
+    for(let d = unitStartDay(u.n); d <= unitLastDay(u.n); d++){
       const checked = dayChecked(d);
       const missed = !checked && d < curDay();
       const item = document.createElement('button');
@@ -1217,20 +1224,14 @@
     if(state.splitMode === 'units'){
       const cu = currentUnit();
       if(!cu){ showSpeech('全単元クリア済み。ゆっくり休んでね。'); return; }
+      // 1日経過。去る日をチェックしていなければ、何日でも経験値が減る
       const leaving = curDay();
-      if(leaving >= unitEndDay(cu.n)){
-        showSpeech('この単元の最終日。「やった」からチェックして完了しよう。');
-        return;
-      }
-      let penalized = false;
-      if(leaving >= unitStartDay(cu.n) && !dayChecked(leaving)){
-        state.xp = Math.max(0, state.xp - MISS_PENALTY_XP);
-        penalized = true;
-      }
+      const penalized = !dayChecked(leaving);
+      if(penalized) state.xp = Math.max(0, state.xp - MISS_PENALTY_XP);
       state.daysPassed += 1;
       renderScreenB();
       showSpeech(penalized
-        ? 'きのうはチェックできなかった…経験値が' + MISS_PENALTY_XP + '下がった。'
+        ? leaving + '日目のチェックを忘れた…経験値が' + MISS_PENALTY_XP + '下がった。'
         : curDay() + '日目。今日の1チェック、わすれずに。');
       return;
     }
