@@ -466,6 +466,9 @@
   }
   .ghost-btn:active{ transform:translate(2px,2px); box-shadow:none; }
 
+  .confirm-card{ max-width:340px; gap:14px; }
+  .confirm-card .card-title{ font-size:15px; line-height:1.5; margin:4px 0 8px; }
+
   @media (min-width:760px){
     .modal-card{ max-width:680px; }
     .unit-name-list{
@@ -637,6 +640,17 @@
       </div>
     </div>
   </div>
+
+  <!-- ============ 確認（モーダル） ============ -->
+  <div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal-card confirm-card">
+      <div class="card-title" id="confirmText">ほんまにやった？</div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="confirmNo">まだ</button>
+        <button class="primary-btn" id="confirmYes">やった！</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -718,6 +732,11 @@
     unitModalBack: document.getElementById('unitModalBack'),
     unitModalConfirm: document.getElementById('unitModalConfirm'),
 
+    confirmModal: document.getElementById('confirmModal'),
+    confirmText: document.getElementById('confirmText'),
+    confirmYes: document.getElementById('confirmYes'),
+    confirmNo: document.getElementById('confirmNo'),
+
     screenA: document.getElementById('screenA'),
     screenB: document.getElementById('screenB'),
 
@@ -748,6 +767,25 @@
   function currentLevel(){
     return Math.min(MAX_LEVEL, Math.floor(state.xp / XP_PER_LEVEL) + 1);
   }
+
+  // ---------- 確認モーダル（ネイティブconfirmの代わり） ----------
+  let confirmResolver = null;
+  function askConfirm(message){
+    els.confirmText.textContent = message;
+    els.confirmModal.classList.remove('hidden');
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function closeConfirm(result){
+    els.confirmModal.classList.add('hidden');
+    const resolve = confirmResolver;
+    confirmResolver = null;
+    if(resolve) resolve(result);
+  }
+  els.confirmYes.addEventListener('click', () => closeConfirm(true));
+  els.confirmNo.addEventListener('click', () => closeConfirm(false));
+  els.confirmModal.addEventListener('click', e => {
+    if(e.target === els.confirmModal) closeConfirm(false);
+  });
 
   // ---------- 画像アップロード ----------
   function bindUpload(box, input, placeholder, onLoaded){
@@ -933,11 +971,11 @@
     els.speechBubble.classList.add('show');
   }
 
-  function completeTask(kind){
+  async function completeTask(kind){
     const alreadyDone = kind === 'review' ? state.reviewDoneToday : state.mainDoneToday;
     if(alreadyDone) return;
 
-    const ok = confirm('ほんまにやった？');
+    const ok = await askConfirm('ほんまにやった？');
     if(!ok) return;
 
     const prevLevel = currentLevel();
@@ -1000,7 +1038,7 @@
     });
   }
 
-  function completeUnit(n){
+  async function completeUnit(n){
     const unit = state.units.find(u => u.n === n);
     if(!unit || unit.done) return;
     if(!isUnitUnlocked(n)){
@@ -1008,7 +1046,7 @@
       return;
     }
 
-    const ok = confirm('「' + unit.name + '」やった？');
+    const ok = await askConfirm('「' + unit.name + '」やった？');
     if(!ok) return;
 
     const prevLevel = currentLevel();
