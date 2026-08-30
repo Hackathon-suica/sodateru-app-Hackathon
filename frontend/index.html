@@ -47,11 +47,13 @@
     body.screen-b #screenB{
       max-width:none;
       display:grid;
-      grid-template-columns:380px 1fr;
-      gap:18px;
+      grid-template-columns:300px 1fr;
+      gap:20px;
       align-items:start;
     }
     body.screen-b #screenB > .card{ margin-bottom:0; }
+    body.screen-b .char-visual{ aspect-ratio:5/4; }
+    body.screen-b .unit-grid{ grid-template-columns:repeat(4, 1fr); }
   }
 
   .tagline{
@@ -474,29 +476,30 @@
     .unit-name-field{ margin-bottom:0; }
   }
 
-  /* ---------- 画面B：単元リスト（グリッドで横に広がる） ---------- */
+  /* ---------- 画面B：単元カードのグリッド（横に段組み） ---------- */
   .unit-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
-    gap:10px;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:12px;
     margin-bottom:14px;
   }
   .unit-cell{
     display:flex;
-    align-items:center;
-    gap:10px;
+    flex-direction:column;
+    gap:8px;
     background:var(--card-alt);
     border:2px solid var(--ink);
     border-radius:14px;
-    padding:12px 14px;
+    padding:12px;
+    min-height:132px;
   }
   .unit-cell.done{ background:var(--leaf-soft); }
   .unit-cell.current{ background:var(--gold-soft); }
   .unit-cell.locked{ opacity:0.5; }
   .unit-cell .unit-no{
-    flex-shrink:0;
-    width:28px;
-    height:28px;
+    align-self:flex-start;
+    width:26px;
+    height:26px;
     border:2px solid var(--ink);
     border-radius:8px;
     background:var(--gold-soft);
@@ -508,10 +511,10 @@
     justify-content:center;
   }
   .unit-cell.done .unit-no{ background:var(--leaf); color:#fff; }
-  .unit-cell .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-  .unit-cell .unit-nm{ font-size:13px; font-weight:700; word-break:break-word; }
+  .unit-cell .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .unit-cell .unit-nm{ font-size:13px; font-weight:700; word-break:break-word; line-height:1.35; }
   .unit-cell .unit-range{ font-size:10.5px; color:var(--ink-soft); font-weight:500; }
-  .unit-cell .task-btn{ flex-shrink:0; }
+  .unit-cell .task-btn{ width:100%; padding:9px 8px; }
   .unit-cell .task-btn[disabled]{
     background:var(--bg);
     color:var(--ink-soft);
