@@ -462,17 +462,17 @@
     margin-bottom:10px;
   }
   .unit-task-row.done{ background:var(--leaf-soft); }
-  .unit-task-row.locked{ opacity:0.5; }
+  .unit-task-row.current{ background:var(--gold-soft); }
+  .unit-task-row.current.done{ background:var(--leaf-soft); }
   .unit-task-row .unit-no{ flex-shrink:0; width:28px; height:28px; border-radius:8px; font-size:12px; }
   .unit-task-row .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .unit-task-row .unit-nm{ font-size:13.5px; font-weight:700; word-break:break-word; }
   .unit-task-row .unit-range{ font-size:11px; color:var(--ink-soft); font-weight:500; }
-  .unit-task-row .task-btn[disabled]{
-    background:var(--bg);
+  .unit-next-note{
+    font-size:12px;
     color:var(--ink-soft);
-    border-color:var(--ink-soft);
-    box-shadow:none;
-    cursor:not-allowed;
+    line-height:1.6;
+    padding:2px 4px;
   }
 </style>
 </head>
@@ -848,10 +848,10 @@
     if(isUnits){
       const doneCount = state.units.filter(u => u.done).length;
       const currentDay = state.daysPassed + 1;
-      els.taskCardTitle.textContent = '単元リスト';
+      els.taskCardTitle.textContent = '今日の単元';
       els.taskDesc.textContent =
-        state.totalDays + '日間で全' + state.units.length + '単元。' + state.daysPerUnit +
-        '日ごとに次の単元が解放されます（いまは' + currentDay + '日目・' + doneCount + '／' + state.units.length + ' 完了）。';
+        currentDay + '日目 / 全' + state.totalDays + '日（' + state.daysPerUnit + '日ごとに次の単元）。' +
+        doneCount + '／' + state.units.length + ' 単元 完了。';
       renderUnitTasks();
     } else {
       els.taskCardTitle.textContent = '今日のタスク';
@@ -911,44 +911,57 @@
   els.reviewBtn.addEventListener('click', () => completeTask('review'));
   els.mainBtn.addEventListener('click', () => completeTask('main'));
 
-  // ---------- 画面B：単元リスト（番号の小さい順・日数ごとに解放） ----------
+  // ---------- 画面B：今日の単元だけ表示（日数から自動で区切る） ----------
   function unitStartDay(n){ return (n - 1) * state.daysPerUnit + 1; }
   function unitEndDay(n){
     const raw = n === state.units.length ? state.totalDays : n * state.daysPerUnit;
     return Math.max(raw, unitStartDay(n));
   }
-  function isUnitUnlocked(n){ return (state.daysPassed + 1) >= unitStartDay(n); }
+  // 今日の日数がどの単元の期間に入っているか。期間を過ぎていれば最後の単元。
+  function currentUnitNumber(){
+    const currentDay = state.daysPassed + 1;
+    const hit = state.units.find(u => currentDay >= unitStartDay(u.n) && currentDay <= unitEndDay(u.n));
+    return hit ? hit.n : state.units.length;
+  }
 
   function renderUnitTasks(){
     els.unitTasks.innerHTML = '';
-    const sorted = [...state.units].sort((a, b) => a.n - b.n);
-    sorted.forEach(u => {
-      const locked = !u.done && !isUnitUnlocked(u.n);
-      const row = document.createElement('div');
-      row.className = 'unit-task-row' + (u.done ? ' done' : '') + (locked ? ' locked' : '');
-      let btnText = u.done ? 'やった✓' : (locked ? '🔒 ' + unitStartDay(u.n) + '日目〜' : 'やった');
-      row.innerHTML =
-        '<span class="unit-no">' + u.n + '</span>' +
-        '<span class="unit-info">' +
-          '<span class="unit-nm"></span>' +
-          '<span class="unit-range">' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目</span>' +
-        '</span>' +
-        '<button class="task-btn' + (u.done ? ' done' : '') + '"' + (locked ? ' disabled' : '') + '>' + btnText + '</button>';
-      row.querySelector('.unit-nm').textContent = u.name;
-      if(!u.done && !locked){
-        row.querySelector('button').addEventListener('click', () => completeUnit(u.n));
+    if(!state.units.length) return;
+
+    const n = currentUnitNumber();
+    const u = state.units.find(x => x.n === n);
+
+    const row = document.createElement('div');
+    row.className = 'unit-task-row current' + (u.done ? ' done' : '');
+    row.innerHTML =
+      '<span class="unit-no">' + u.n + '</span>' +
+      '<span class="unit-info">' +
+        '<span class="unit-nm"></span>' +
+        '<span class="unit-range">' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目 ・ ' + u.n + ' / ' + state.units.length + '</span>' +
+      '</span>' +
+      '<button class="task-btn' + (u.done ? ' done' : '') + '">' + (u.done ? 'やった✓' : 'やった') + '</button>';
+    row.querySelector('.unit-nm').textContent = u.name;
+    if(!u.done){
+      row.querySelector('button').addEventListener('click', () => completeUnit(u.n));
+    }
+    els.unitTasks.appendChild(row);
+
+    if(u.done){
+      const note = document.createElement('div');
+      note.className = 'unit-next-note';
+      if(u.n < state.units.length){
+        const next = state.units.find(x => x.n === u.n + 1);
+        note.textContent = '次は「' + next.name + '」。' + unitStartDay(next.n) + '日目からです。「翌日へ進める」で進もう。';
+      } else {
+        note.textContent = 'すべての単元が完了しました！';
       }
-      els.unitTasks.appendChild(row);
-    });
+      els.unitTasks.appendChild(note);
+    }
   }
 
   function completeUnit(n){
     const unit = state.units.find(u => u.n === n);
     if(!unit || unit.done) return;
-    if(!isUnitUnlocked(n)){
-      showSpeech('この単元は' + unitStartDay(n) + '日目から。いまは番号の小さい単元から進めよう。');
-      return;
-    }
 
     const ok = confirm('「' + unit.name + '」やった？');
     if(!ok) return;
