@@ -40,6 +40,20 @@
   .app{ width:100%; max-width:440px; }
   .hidden{ display:none !important; }
 
+  /* 画面Bは単元数が増えると横に広がる（PC幅） */
+  #screenB{ max-width:440px; margin:0 auto; }
+  @media (min-width:760px){
+    body.screen-b .app{ max-width:1120px; }
+    body.screen-b #screenB{
+      max-width:none;
+      display:grid;
+      grid-template-columns:380px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    body.screen-b #screenB > .card{ margin-bottom:0; }
+  }
+
   .tagline{
     text-align:center;
     font-family:'Zen Maru Gothic', sans-serif;
@@ -450,8 +464,24 @@
   }
   .ghost-btn:active{ transform:translate(2px,2px); box-shadow:none; }
 
-  /* ---------- 画面B：単元リスト ---------- */
-  .unit-task-row{
+  @media (min-width:760px){
+    .modal-card{ max-width:680px; }
+    .unit-name-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:10px 14px;
+    }
+    .unit-name-field{ margin-bottom:0; }
+  }
+
+  /* ---------- 画面B：単元リスト（グリッドで横に広がる） ---------- */
+  .unit-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .unit-cell{
     display:flex;
     align-items:center;
     gap:10px;
@@ -459,15 +489,36 @@
     border:2px solid var(--ink);
     border-radius:14px;
     padding:12px 14px;
-    margin-bottom:10px;
   }
-  .unit-task-row.done{ background:var(--leaf-soft); }
-  .unit-task-row.current{ background:var(--gold-soft); }
-  .unit-task-row.current.done{ background:var(--leaf-soft); }
-  .unit-task-row .unit-no{ flex-shrink:0; width:28px; height:28px; border-radius:8px; font-size:12px; }
-  .unit-task-row .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-  .unit-task-row .unit-nm{ font-size:13.5px; font-weight:700; word-break:break-word; }
-  .unit-task-row .unit-range{ font-size:11px; color:var(--ink-soft); font-weight:500; }
+  .unit-cell.done{ background:var(--leaf-soft); }
+  .unit-cell.current{ background:var(--gold-soft); }
+  .unit-cell.locked{ opacity:0.5; }
+  .unit-cell .unit-no{
+    flex-shrink:0;
+    width:28px;
+    height:28px;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-cell.done .unit-no{ background:var(--leaf); color:#fff; }
+  .unit-cell .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .unit-cell .unit-nm{ font-size:13px; font-weight:700; word-break:break-word; }
+  .unit-cell .unit-range{ font-size:10.5px; color:var(--ink-soft); font-weight:500; }
+  .unit-cell .task-btn{ flex-shrink:0; }
+  .unit-cell .task-btn[disabled]{
+    background:var(--bg);
+    color:var(--ink-soft);
+    border-color:var(--ink-soft);
+    box-shadow:none;
+    cursor:not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -561,7 +612,7 @@
         </div>
       </div>
 
-      <div id="unitTasks" class="hidden"></div>
+      <div id="unitTasks" class="unit-grid hidden"></div>
 
       <button class="change-char-btn" id="changeCharBtn">キャラクターを変える</button>
       <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
@@ -780,6 +831,7 @@
     renderScreenB();
     els.screenA.classList.add('hidden');
     els.screenB.classList.remove('hidden');
+    document.body.classList.add('screen-b');
     if(message) showSpeech(message);
   }
 
@@ -842,12 +894,12 @@
 
     if(isUnits){
       const doneCount = state.units.filter(u => u.done).length;
-      els.taskCardTitle.textContent = '今日の単元';
+      els.taskCardTitle.textContent = '単元リスト';
       els.taskDesc.textContent =
-        doneCount + '／' + state.units.length + ' 単元 完了。' +
+        '全' + state.units.length + '単元（' + doneCount + '／' + state.units.length + ' 完了）。' +
         (doneCount >= state.units.length
           ? 'すべて終わりました！'
-          : 'いまの単元を終わらせると、次の単元に進めます。');
+          : '前の単元を終わらせると、次の単元が解放されます。');
       renderUnitTasks();
     } else {
       els.taskCardTitle.textContent = '今日のタスク';
@@ -907,44 +959,51 @@
   els.reviewBtn.addEventListener('click', () => completeTask('review'));
   els.mainBtn.addEventListener('click', () => completeTask('main'));
 
-  // ---------- 画面B：いまの単元だけ表示（1つ終わらせたら次へ） ----------
+  // ---------- 画面B：単元リスト（全表示・前の単元をクリアで解放） ----------
   function unitStartDay(n){ return (n - 1) * state.daysPerUnit + 1; }
   function unitEndDay(n){
     const raw = n === state.units.length ? state.totalDays : n * state.daysPerUnit;
     return Math.max(raw, unitStartDay(n));
   }
-  // 表示する単元＝まだ終わっていない一番小さい番号の単元。全部終わっていれば最後の単元。
-  function currentUnitNumber(){
-    const firstUndone = state.units.find(u => !u.done);
-    return firstUndone ? firstUndone.n : state.units.length;
+  // n番目の単元が解放済みか＝1番目、または直前の単元が完了している
+  function isUnitUnlocked(n){
+    if(n <= 1) return true;
+    const prev = state.units.find(u => u.n === n - 1);
+    return !!(prev && prev.done);
   }
 
   function renderUnitTasks(){
     els.unitTasks.innerHTML = '';
-    if(!state.units.length) return;
-
-    const n = currentUnitNumber();
-    const u = state.units.find(x => x.n === n);
-
-    const row = document.createElement('div');
-    row.className = 'unit-task-row current' + (u.done ? ' done' : '');
-    row.innerHTML =
-      '<span class="unit-no">' + u.n + '</span>' +
-      '<span class="unit-info">' +
-        '<span class="unit-nm"></span>' +
-        '<span class="unit-range">目安 ' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目 ・ ' + u.n + ' / ' + state.units.length + '</span>' +
-      '</span>' +
-      '<button class="task-btn' + (u.done ? ' done' : '') + '">' + (u.done ? 'やった✓' : 'やった') + '</button>';
-    row.querySelector('.unit-nm').textContent = u.name;
-    if(!u.done){
-      row.querySelector('button').addEventListener('click', () => completeUnit(u.n));
-    }
-    els.unitTasks.appendChild(row);
+    const sorted = [...state.units].sort((a, b) => a.n - b.n);
+    sorted.forEach(u => {
+      const unlocked = isUnitUnlocked(u.n);
+      const locked = !u.done && !unlocked;
+      const current = !u.done && unlocked;
+      const cell = document.createElement('div');
+      cell.className = 'unit-cell' + (u.done ? ' done' : '') + (locked ? ' locked' : '') + (current ? ' current' : '');
+      const btnText = u.done ? 'やった✓' : (locked ? '🔒' : 'やった');
+      cell.innerHTML =
+        '<span class="unit-no">' + u.n + '</span>' +
+        '<span class="unit-info">' +
+          '<span class="unit-nm"></span>' +
+          '<span class="unit-range">目安 ' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目</span>' +
+        '</span>' +
+        '<button class="task-btn' + (u.done ? ' done' : '') + '"' + (locked ? ' disabled' : '') + '>' + btnText + '</button>';
+      cell.querySelector('.unit-nm').textContent = u.name;
+      if(!u.done && !locked){
+        cell.querySelector('button').addEventListener('click', () => completeUnit(u.n));
+      }
+      els.unitTasks.appendChild(cell);
+    });
   }
 
   function completeUnit(n){
     const unit = state.units.find(u => u.n === n);
     if(!unit || unit.done) return;
+    if(!isUnitUnlocked(n)){
+      showSpeech('前の単元を終わらせてから挑戦しよう。');
+      return;
+    }
 
     const ok = confirm('「' + unit.name + '」やった？');
     if(!ok) return;
@@ -975,6 +1034,7 @@
 
     els.screenB.classList.add('hidden');
     els.screenA.classList.remove('hidden');
+    document.body.classList.remove('screen-b');
   });
 
   els.dayAdvanceBtn.addEventListener('click', () => {
