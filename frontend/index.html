@@ -369,6 +369,101 @@
     font-family:inherit;
     padding:6px;
   }
+
+  /* ---------- 単元名の入力モーダル ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(34,26,18,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    z-index:50;
+  }
+  .modal-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    width:100%;
+    max-width:400px;
+    max-height:84vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .unit-name-list{
+    overflow-y:auto;
+    margin:6px -4px 10px;
+    padding:0 4px;
+  }
+  .unit-name-field{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .unit-no{
+    flex-shrink:0;
+    width:34px;
+    height:34px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-name-field input{
+    flex:1;
+    min-width:0;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 11px;
+    font-size:13px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+  }
+  .unit-name-field input:focus{ outline:none; background:#FFFDF9; }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-actions .primary-btn{ flex:1; }
+  .ghost-btn{
+    border:2.5px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:14px;
+    padding:14px 18px;
+    font-size:14px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    flex-shrink:0;
+  }
+  .ghost-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  /* ---------- 画面B：単元リスト ---------- */
+  .unit-task-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .unit-task-row.done{ background:var(--leaf-soft); }
+  .unit-task-row .unit-no{ width:28px; height:28px; border-radius:8px; font-size:12px; }
+  .unit-task-row .unit-nm{ flex:1; font-size:13.5px; font-weight:700; word-break:break-word; }
 </style>
 </head>
 <body>
@@ -441,29 +536,47 @@
     </div>
 
     <div class="card">
-      <div class="card-title">今日のタスク</div>
+      <div class="card-title" id="taskCardTitle">今日のタスク</div>
       <div class="card-desc" id="taskDesc"></div>
 
-      <div class="task-row" id="reviewRow">
-        <div class="task-info">
-          <div class="task-name">復習</div>
-          <div class="task-amount" id="reviewAmount">0 ページ</div>
+      <div id="pagesTasks">
+        <div class="task-row" id="reviewRow">
+          <div class="task-info">
+            <div class="task-name">復習</div>
+            <div class="task-amount" id="reviewAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="reviewBtn">やった</button>
         </div>
-        <button class="task-btn" id="reviewBtn">やった</button>
+
+        <div class="task-row" id="mainRow">
+          <div class="task-info">
+            <div class="task-name">本学習</div>
+            <div class="task-amount" id="mainAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="mainBtn">やった</button>
+        </div>
       </div>
 
-      <div class="task-row" id="mainRow">
-        <div class="task-info">
-          <div class="task-name">本学習</div>
-          <div class="task-amount" id="mainAmount">0 ページ</div>
-        </div>
-        <button class="task-btn" id="mainBtn">やった</button>
-      </div>
+      <div id="unitTasks" class="hidden"></div>
 
       <button class="change-char-btn" id="changeCharBtn">キャラクターを変える</button>
       <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
 
       <button class="day-advance" id="dayAdvanceBtn">（デモ用）翌日へ進める</button>
+    </div>
+  </div>
+
+  <!-- ============ 単元名の入力（モーダル） ============ -->
+  <div id="unitModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="card-title">単元の名前を入力</div>
+      <div class="card-desc">各単元に名前をつけましょう。番号の小さい順に取り組みます。空欄のままでもかまいません（「単元1」などになります）。</div>
+      <div class="unit-name-list" id="unitNameList"></div>
+      <div class="form-error" id="unitModalError"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="unitModalBack">もどる</button>
+        <button class="primary-btn" id="unitModalConfirm">この内容で始める</button>
+      </div>
     </div>
   </div>
 </div>
@@ -519,6 +632,8 @@
     reviewAmount:0,
     mainAmount:0,
     xpPerDay:0,
+    units:[],        // 単元モード用：[{ n, name, done }]
+    xpPerUnit:0,
     xp:0,
     reviewDoneToday:false,
     mainDoneToday:false,
@@ -538,6 +653,12 @@
     formError: document.getElementById('formError'),
     registerBtn: document.getElementById('registerBtn'),
 
+    unitModal: document.getElementById('unitModal'),
+    unitNameList: document.getElementById('unitNameList'),
+    unitModalError: document.getElementById('unitModalError'),
+    unitModalBack: document.getElementById('unitModalBack'),
+    unitModalConfirm: document.getElementById('unitModalConfirm'),
+
     screenA: document.getElementById('screenA'),
     screenB: document.getElementById('screenB'),
 
@@ -547,7 +668,10 @@
     expDetail: document.getElementById('expDetail'),
     expFill: document.getElementById('expFill'),
 
+    taskCardTitle: document.getElementById('taskCardTitle'),
     taskDesc: document.getElementById('taskDesc'),
+    pagesTasks: document.getElementById('pagesTasks'),
+    unitTasks: document.getElementById('unitTasks'),
     reviewRow: document.getElementById('reviewRow'),
     reviewAmount: document.getElementById('reviewAmount'),
     reviewBtn: document.getElementById('reviewBtn'),
@@ -609,6 +733,8 @@
   applySplitMode(state.splitMode);
 
   // ---------- 画面A：登録 ----------
+  const MAX_UNITS = 100;
+
   els.registerBtn.addEventListener('click', () => {
     const totalAmount = parseInt(els.totalAmountInput.value, 10);
     const totalDays = parseInt(els.totalDaysInput.value, 10);
@@ -616,6 +742,10 @@
 
     if(!totalAmount || totalAmount < 1){
       els.formError.textContent = '合計' + unit + '数を正しく入力してください。';
+      return;
+    }
+    if(state.splitMode === 'units' && totalAmount > MAX_UNITS){
+      els.formError.textContent = '単元数は' + MAX_UNITS + '以下で入力してください。';
       return;
     }
     if(!totalDays || totalDays < 1){
@@ -628,15 +758,62 @@
     state.totalAmount = totalAmount;
     state.totalDays = totalDays;
 
+    if(state.splitMode === 'units'){
+      openUnitModal(totalAmount);
+      return;
+    }
+
     const amountPerDay = Math.ceil(totalAmount / totalDays);
     state.mainAmount = amountPerDay;
     state.reviewAmount = Math.max(1, Math.round(amountPerDay * 0.3));
     state.xpPerDay = TOTAL_XP / totalDays;
 
+    goToScreenB('ここから始めよう。今日のタスクを見てみて。');
+  });
+
+  function goToScreenB(message){
     renderScreenB();
     els.screenA.classList.add('hidden');
     els.screenB.classList.remove('hidden');
-    showSpeech('ここから始めよう。今日のタスクを見てみて。');
+    if(message) showSpeech(message);
+  }
+
+  // ---------- 画面A：単元名の入力モーダル ----------
+  function openUnitModal(count){
+    els.unitNameList.innerHTML = '';
+    for(let i = 1; i <= count; i++){
+      const prev = state.units.find(u => u.n === i);
+      const field = document.createElement('label');
+      field.className = 'unit-name-field';
+      field.innerHTML =
+        '<span class="unit-no">' + i + '</span>' +
+        '<input type="text" maxlength="30" placeholder="単元' + i + '（例：三角関数）">';
+      if(prev && prev.name && prev.name !== ('単元' + i)){
+        field.querySelector('input').value = prev.name;
+      }
+      els.unitNameList.appendChild(field);
+    }
+    els.unitModalError.textContent = '';
+    els.unitModal.classList.remove('hidden');
+    const first = els.unitNameList.querySelector('input');
+    if(first) first.focus();
+  }
+
+  function closeUnitModal(){
+    els.unitModal.classList.add('hidden');
+  }
+
+  els.unitModalBack.addEventListener('click', closeUnitModal);
+
+  els.unitModalConfirm.addEventListener('click', () => {
+    const inputs = [...els.unitNameList.querySelectorAll('input')];
+    state.units = inputs.map((inp, idx) => {
+      const n = idx + 1;
+      return { n, name: inp.value.trim() || ('単元' + n), done:false };
+    });
+    state.xpPerUnit = TOTAL_XP / state.units.length;
+    closeUnitModal();
+    goToScreenB('単元を' + state.units.length + '個登録したよ。番号の小さい順に進めよう。');
   });
 
   // ---------- 画面B：描画 ----------
@@ -651,13 +828,25 @@
     els.expFill.style.width = pct + '%';
     els.expDetail.textContent = 'Lv ' + level + ' / Lv' + MAX_LEVEL;
 
-    els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。';
+    const isUnits = state.splitMode === 'units';
+    els.pagesTasks.classList.toggle('hidden', isUnits);
+    els.unitTasks.classList.toggle('hidden', !isUnits);
+    els.dayAdvanceBtn.classList.toggle('hidden', isUnits);
 
-    els.reviewAmount.textContent = state.reviewAmount + ' ' + state.unitLabel;
-    els.mainAmount.textContent = state.mainAmount + ' ' + state.unitLabel;
-
-    updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
-    updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+    if(isUnits){
+      const doneCount = state.units.filter(u => u.done).length;
+      els.taskCardTitle.textContent = '単元リスト';
+      els.taskDesc.textContent =
+        '全' + state.units.length + '単元（' + doneCount + '／' + state.units.length + ' 完了）。番号の小さい順に進めましょう。';
+      renderUnitTasks();
+    } else {
+      els.taskCardTitle.textContent = '今日のタスク';
+      els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。';
+      els.reviewAmount.textContent = state.reviewAmount + ' ' + state.unitLabel;
+      els.mainAmount.textContent = state.mainAmount + ' ' + state.unitLabel;
+      updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
+      updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+    }
 
     const maxed = level >= MAX_LEVEL;
     els.changeCharBtn.classList.toggle('locked', !maxed);
@@ -707,6 +896,48 @@
 
   els.reviewBtn.addEventListener('click', () => completeTask('review'));
   els.mainBtn.addEventListener('click', () => completeTask('main'));
+
+  // ---------- 画面B：単元リスト（番号の小さい順） ----------
+  function renderUnitTasks(){
+    els.unitTasks.innerHTML = '';
+    const sorted = [...state.units].sort((a, b) => a.n - b.n);
+    sorted.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'unit-task-row' + (u.done ? ' done' : '');
+      row.innerHTML =
+        '<span class="unit-no">' + u.n + '</span>' +
+        '<span class="unit-nm"></span>' +
+        '<button class="task-btn' + (u.done ? ' done' : '') + '">' + (u.done ? 'やった✓' : 'やった') + '</button>';
+      row.querySelector('.unit-nm').textContent = u.name;
+      if(!u.done){
+        row.querySelector('button').addEventListener('click', () => completeUnit(u.n));
+      }
+      els.unitTasks.appendChild(row);
+    });
+  }
+
+  function completeUnit(n){
+    const unit = state.units.find(u => u.n === n);
+    if(!unit || unit.done) return;
+
+    const ok = confirm('「' + unit.name + '」やった？');
+    if(!ok) return;
+
+    const prevLevel = currentLevel();
+    state.xp = Math.min(TOTAL_XP, state.xp + state.xpPerUnit);
+    unit.done = true;
+
+    renderScreenB();
+
+    const newLevel = currentLevel();
+    if(state.units.every(u => u.done)){
+      showSpeech('全単元クリア！ここまで走りきったの、本当にすごいよ。');
+    } else if(newLevel > prevLevel){
+      showSpeech(randomFrom(MESSAGES.levelUp));
+    } else {
+      showSpeech(randomFrom(MESSAGES.complete));
+    }
+  }
 
   els.changeCharBtn.addEventListener('click', () => {
     const maxed = currentLevel() >= MAX_LEVEL;
