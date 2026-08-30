@@ -526,40 +526,51 @@
     cursor:not-allowed;
   }
 
-  /* 単元カード内：日ごとのチェック欄 */
-  .day-checks{
+  /* 単元カード：チェック進捗 */
+  .unit-cell .unit-progress{ font-size:10.5px; color:var(--ink-soft); font-weight:700; }
+
+  /* 日ごとチェックリスト（モーダル） */
+  .check-card{ max-width:400px; }
+  .check-list{
+    overflow-y:auto;
+    margin:4px -4px 12px;
+    padding:0 4px;
     display:flex;
-    flex-wrap:wrap;
-    gap:4px;
+    flex-direction:column;
+    gap:8px;
   }
-  .day-check{
-    width:22px;
-    height:22px;
+  .check-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:100%;
     border:2px solid var(--ink);
-    border-radius:6px;
+    border-radius:12px;
     background:var(--card-alt);
-    font-family:'Zen Maru Gothic', sans-serif;
+    padding:11px 13px;
+    font-family:inherit;
+    font-size:13.5px;
     font-weight:700;
-    font-size:10px;
-    line-height:1;
-    color:var(--ink);
-    padding:0;
-    cursor:default;
-  }
-  .day-check.checked{ background:var(--leaf); color:#fff; }
-  .day-check.missed{ background:var(--red); color:#fff; border-style:dashed; }
-  .day-check.today{
-    background:var(--gold);
     color:var(--ink);
     cursor:pointer;
-    animation:dayPulse 1s ease-in-out infinite;
+    text-align:left;
   }
-  .day-check.future,
-  .day-check.past{ opacity:0.4; }
-  @keyframes dayPulse{
-    0%,100%{ box-shadow:0 0 0 0 var(--gold); }
-    50%{ box-shadow:0 0 0 3px var(--gold-soft); }
+  .check-item .check-box{
+    flex-shrink:0;
+    width:24px;
+    height:24px;
+    border:2px solid var(--ink);
+    border-radius:7px;
+    background:var(--card);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    color:#fff;
   }
+  .check-item.checked{ background:var(--leaf-soft); }
+  .check-item.checked .check-box{ background:var(--leaf); }
+  .check-item.missed{ border-color:var(--red); color:var(--red); }
 </style>
 </head>
 <body>
@@ -686,6 +697,19 @@
       </div>
     </div>
   </div>
+
+  <!-- ============ 単元の日ごとチェックリスト（モーダル） ============ -->
+  <div id="checkModal" class="modal-overlay hidden">
+    <div class="modal-card check-card">
+      <div class="card-title" id="checkModalTitle">単元</div>
+      <div class="card-desc" id="checkModalDesc">日ごとにチェックしよう。全部そろえると完了できます。</div>
+      <div class="check-list" id="checkList"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="checkModalClose">とじる</button>
+        <button class="primary-btn" id="checkModalDone" disabled>この単元を完了</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -774,6 +798,13 @@
     confirmText: document.getElementById('confirmText'),
     confirmYes: document.getElementById('confirmYes'),
     confirmNo: document.getElementById('confirmNo'),
+
+    checkModal: document.getElementById('checkModal'),
+    checkModalTitle: document.getElementById('checkModalTitle'),
+    checkModalDesc: document.getElementById('checkModalDesc'),
+    checkList: document.getElementById('checkList'),
+    checkModalClose: document.getElementById('checkModalClose'),
+    checkModalDone: document.getElementById('checkModalDone'),
 
     screenA: document.getElementById('screenA'),
     screenB: document.getElementById('screenB'),
@@ -1057,40 +1088,13 @@
   const curDay = () => state.daysPassed + 1;
   const dayChecked = (d) => state.checkedDays.indexOf(d) !== -1;
   const currentUnit = () => state.units.find(u => !u.done && isUnitUnlocked(u.n)) || null;
-
-  // 今日の1チェック（単元モード）
-  function checkDay(d){
-    const cu = currentUnit();
-    if(!cu) return;
-    if(d !== curDay() || dayChecked(d)) return;
-    if(d < unitStartDay(cu.n) || d > unitEndDay(cu.n)) return;
-    state.checkedDays.push(d);
-    const prevLevel = currentLevel();
-    state.xp = Math.min(TOTAL_XP, state.xp + DAILY_CHECK_XP);
-    renderScreenB();
-    showSpeech(currentLevel() > prevLevel
-      ? randomFrom(MESSAGES.levelUp)
-      : '今日の分、記録できた！えらい。');
+  const unitDayCount = (n) => unitEndDay(n) - unitStartDay(n) + 1;
+  function unitCheckedCount(n){
+    let c = 0;
+    for(let d = unitStartDay(n); d <= unitEndDay(n); d++) if(dayChecked(d)) c++;
+    return c;
   }
-
-  // 単元カード内の「日ごとのチェック欄」
-  function buildDayChecks(u, locked, current){
-    const s = unitStartDay(u.n), e = unitEndDay(u.n);
-    let html = '<div class="day-checks">';
-    for(let d = s; d <= e; d++){
-      let cls = 'day-check';
-      let interactive = false;
-      if(dayChecked(d)) cls += ' checked';
-      else if(u.done) cls += ' past';
-      else if(locked) cls += ' future';
-      else if(d === curDay()){ cls += ' today'; interactive = true; }
-      else if(d < curDay()) cls += ' missed';
-      else cls += ' future';
-      html += '<button type="button" class="' + cls + '" data-day="' + d + '"' +
-        (interactive ? '' : ' disabled') + '>' + d + '</button>';
-    }
-    return html + '</div>';
-  }
+  const unitAllChecked = (n) => unitCheckedCount(n) >= unitDayCount(n);
 
   function renderUnitTasks(){
     els.unitTasks.innerHTML = '';
@@ -1107,48 +1111,94 @@
         '<span class="unit-info">' +
           '<span class="unit-nm"></span>' +
           '<span class="unit-range">目安 ' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目</span>' +
+          '<span class="unit-progress">チェック ' + unitCheckedCount(u.n) + ' / ' + unitDayCount(u.n) + '</span>' +
         '</span>' +
-        buildDayChecks(u, locked, current) +
         '<button class="task-btn' + (u.done ? ' done' : '') + '"' + (locked ? ' disabled' : '') + '>' + btnText + '</button>';
       cell.querySelector('.unit-nm').textContent = u.name;
       if(!u.done && !locked){
-        cell.querySelector('.task-btn').addEventListener('click', () => completeUnit(u.n));
+        cell.querySelector('.task-btn').addEventListener('click', () => openCheckModal(u.n));
       }
-      cell.querySelectorAll('.day-check.today').forEach(b => {
-        b.addEventListener('click', () => checkDay(parseInt(b.dataset.day, 10)));
-      });
       els.unitTasks.appendChild(cell);
     });
   }
 
-  async function completeUnit(n){
-    const unit = state.units.find(u => u.n === n);
-    if(!unit || unit.done) return;
-    if(!isUnitUnlocked(n)){
-      showSpeech('前の単元を終わらせてから挑戦しよう。');
-      return;
-    }
+  // ---------- 日ごとのチェックリスト（モーダル） ----------
+  let checkModalUnit = null;
 
-    const ok = await askConfirm('「' + unit.name + '」やった？');
-    if(!ok) return;
+  function openCheckModal(n){
+    const u = state.units.find(x => x.n === n);
+    if(!u || u.done || !isUnitUnlocked(n)) return;
+    checkModalUnit = n;
+    els.checkModalTitle.textContent = u.name;
+    renderCheckList();
+    els.checkModal.classList.remove('hidden');
+  }
+  function closeCheckModal(){
+    els.checkModal.classList.add('hidden');
+    checkModalUnit = null;
+  }
+  function renderCheckList(){
+    const u = state.units.find(x => x.n === checkModalUnit);
+    if(!u) return;
+    els.checkList.innerHTML = '';
+    for(let d = unitStartDay(u.n); d <= unitEndDay(u.n); d++){
+      const checked = dayChecked(d);
+      const missed = !checked && d < curDay();
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'check-item' + (checked ? ' checked' : '') + (missed ? ' missed' : '');
+      item.dataset.day = d;
+      item.innerHTML =
+        '<span class="check-box">' + (checked ? '✓' : '') + '</span>' +
+        '<span class="check-label">' + d + '日目' + (missed ? '（記録わすれ）' : '') + '</span>';
+      item.addEventListener('click', () => toggleCheck(d));
+      els.checkList.appendChild(item);
+    }
+    const all = unitAllChecked(u.n);
+    els.checkModalDone.disabled = !all;
+    els.checkModalDesc.textContent = all
+      ? '全部チェック！「この単元を完了」で次の単元に進めます。'
+      : '日ごとにチェックしよう。全部そろえると完了できます（' + unitCheckedCount(u.n) + ' / ' + unitDayCount(u.n) + '）。';
+  }
+  function toggleCheck(d){
+    const i = state.checkedDays.indexOf(d);
+    if(i === -1){
+      state.checkedDays.push(d);
+      state.xp = Math.min(TOTAL_XP, state.xp + DAILY_CHECK_XP);
+    } else {
+      state.checkedDays.splice(i, 1);
+      state.xp = Math.max(0, state.xp - DAILY_CHECK_XP);
+    }
+    renderCheckList();
+    renderScreenB();
+  }
+  function finishUnitFromModal(){
+    const n = checkModalUnit;
+    const u = state.units.find(x => x.n === n);
+    if(!u || u.done || !unitAllChecked(n)) return;
 
     const prevLevel = currentLevel();
     state.xp = Math.min(TOTAL_XP, state.xp + state.xpPerUnit);
-    unit.done = true;
-    // 次の単元は予定の開始日から。早く終えれば残り日数のチェック忘れは不問。
+    u.done = true;
+    // 次の単元は予定の開始日から
     state.daysPassed = Math.max(state.daysPassed, unitEndDay(n));
 
+    closeCheckModal();
     renderScreenB();
 
-    const newLevel = currentLevel();
-    if(state.units.every(u => u.done)){
+    if(state.units.every(x => x.done)){
       showSpeech('全単元クリア！ここまで走りきったの、本当にすごいよ。');
-    } else if(newLevel > prevLevel){
+    } else if(currentLevel() > prevLevel){
       showSpeech(randomFrom(MESSAGES.levelUp));
     } else {
       showSpeech(randomFrom(MESSAGES.complete));
     }
   }
+  els.checkModalClose.addEventListener('click', closeCheckModal);
+  els.checkModalDone.addEventListener('click', finishUnitFromModal);
+  els.checkModal.addEventListener('click', e => {
+    if(e.target === els.checkModal) closeCheckModal();
+  });
 
   els.changeCharBtn.addEventListener('click', () => {
     const maxed = currentLevel() >= MAX_LEVEL;
@@ -1169,7 +1219,7 @@
       if(!cu){ showSpeech('全単元クリア済み。ゆっくり休んでね。'); return; }
       const leaving = curDay();
       if(leaving >= unitEndDay(cu.n)){
-        showSpeech('この単元の最終日。「やった」を押して次に進もう。');
+        showSpeech('この単元の最終日。「やった」からチェックして完了しよう。');
         return;
       }
       let penalized = false;
