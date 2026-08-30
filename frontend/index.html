@@ -73,13 +73,11 @@
 
   /* ---------- Screen A: setup ---------- */
   .upload-row{
-    display:flex;
-    gap:12px;
     margin-bottom:18px;
   }
   .upload-box{
-    flex:1;
-    aspect-ratio:1;
+    width:100%;
+    aspect-ratio:16/11;
     border:3px solid var(--ink);
     border-radius:16px;
     background:var(--card-alt);
@@ -87,14 +85,14 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:6px;
+    gap:8px;
     cursor:pointer;
     overflow:hidden;
     position:relative;
   }
   .upload-box img{ width:100%;height:100%;object-fit:cover; }
-  .upload-box svg{ width:28px;height:28px; }
-  .upload-box span{ font-size:12px; font-weight:700; }
+  .upload-box svg{ width:34px;height:34px; }
+  .upload-box span{ font-size:13px; font-weight:700; }
   .upload-box input{ display:none; }
   .upload-label{
     text-align:center;
@@ -381,29 +379,17 @@
   <div id="screenA">
     <div class="card">
       <div class="card-title">はじめに設定しよう</div>
-      <div class="card-desc">写真・背景と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
+      <div class="card-desc">写真と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
 
       <div class="upload-row">
-        <div>
-          <label class="upload-box" id="faceBox">
-            <span class="placeholder-content" id="facePlaceholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
-              <span>顔・写真</span>
-            </span>
-            <input type="file" accept="image/*" id="faceInput">
-          </label>
-          <div class="upload-label">顔追加</div>
-        </div>
-        <div>
-          <label class="upload-box" id="bgBox">
-            <span class="placeholder-content" id="bgPlaceholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5" /><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
-              <span>背景</span>
-            </span>
-            <input type="file" accept="image/*" id="bgInput">
-          </label>
-          <div class="upload-label">背景追加</div>
-        </div>
+        <label class="upload-box" id="photoBox">
+          <span class="placeholder-content" id="photoPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5"/><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+            <span>写真を追加</span>
+          </span>
+          <input type="file" accept="image/*" id="photoInput">
+        </label>
+        <div class="upload-label">キャラクターにする写真を1枚選んでください</div>
       </div>
 
       <div class="field">
@@ -525,8 +511,7 @@
 
   let state = {
     registered:false,
-    facePhoto:null,
-    bgPhoto:null,
+    photo:null,
     splitMode:'pages',
     unitLabel:'ページ',
     totalAmount:0,
@@ -541,12 +526,9 @@
   };
 
   const els = {
-    faceBox: document.getElementById('faceBox'),
-    faceInput: document.getElementById('faceInput'),
-    facePlaceholder: document.getElementById('facePlaceholder'),
-    bgBox: document.getElementById('bgBox'),
-    bgInput: document.getElementById('bgInput'),
-    bgPlaceholder: document.getElementById('bgPlaceholder'),
+    photoBox: document.getElementById('photoBox'),
+    photoInput: document.getElementById('photoInput'),
+    photoPlaceholder: document.getElementById('photoPlaceholder'),
     splitToggle: document.getElementById('splitToggle'),
     splitHint: document.getElementById('splitHint'),
     totalAmountLabel: document.getElementById('totalAmountLabel'),
@@ -603,8 +585,7 @@
       reader.readAsDataURL(file);
     });
   }
-  bindUpload(els.faceBox, els.faceInput, els.facePlaceholder, (src) => { state.facePhoto = src; });
-  bindUpload(els.bgBox, els.bgInput, els.bgPlaceholder, (src) => { state.bgPhoto = src; });
+  bindUpload(els.photoBox, els.photoInput, els.photoPlaceholder, (src) => { state.photo = src; });
 
   // ---------- 画面A：分け方の切り替え ----------
   function applySplitMode(mode){
@@ -660,8 +641,7 @@
 
   // ---------- 画面B：描画 ----------
   function renderScreenB(){
-    const visualPhoto = state.facePhoto || state.bgPhoto;
-    els.charVisual.style.backgroundImage = visualPhoto ? `url(${visualPhoto})` : '';
+    els.charVisual.style.backgroundImage = state.photo ? `url(${state.photo})` : '';
 
     const level = currentLevel();
     els.levelPill.textContent = 'Lv.' + level;
