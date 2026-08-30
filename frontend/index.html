@@ -40,6 +40,22 @@
   .app{ width:100%; max-width:440px; }
   .hidden{ display:none !important; }
 
+  /* 画面Bは単元数が増えると横に広がる（PC幅） */
+  #screenB{ max-width:440px; margin:0 auto; }
+  @media (min-width:760px){
+    body.screen-b .app{ max-width:1120px; }
+    body.screen-b #screenB{
+      max-width:none;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+    body.screen-b #screenB > .card{ margin-bottom:0; }
+    body.screen-b .char-visual{ aspect-ratio:5/4; }
+    body.screen-b .unit-grid{ grid-template-columns:repeat(4, 1fr); }
+  }
+
   .tagline{
     text-align:center;
     font-family:'Zen Maru Gothic', sans-serif;
@@ -73,13 +89,11 @@
 
   /* ---------- Screen A: setup ---------- */
   .upload-row{
-    display:flex;
-    gap:12px;
     margin-bottom:18px;
   }
   .upload-box{
-    flex:1;
-    aspect-ratio:1;
+    width:100%;
+    aspect-ratio:16/11;
     border:3px solid var(--ink);
     border-radius:16px;
     background:var(--card-alt);
@@ -87,14 +101,14 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:6px;
+    gap:8px;
     cursor:pointer;
     overflow:hidden;
     position:relative;
   }
   .upload-box img{ width:100%;height:100%;object-fit:cover; }
-  .upload-box svg{ width:28px;height:28px; }
-  .upload-box span{ font-size:12px; font-weight:700; }
+  .upload-box svg{ width:34px;height:34px; }
+  .upload-box span{ font-size:13px; font-weight:700; }
   .upload-box input{ display:none; }
   .upload-label{
     text-align:center;
@@ -110,6 +124,38 @@
     font-size:13px;
     font-weight:700;
     margin-bottom:6px;
+  }
+
+  /* 分け方の切り替え（ページ／単元） */
+  .split-toggle{
+    display:flex;
+    gap:0;
+    border:2.5px solid var(--ink);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .split-toggle button{
+    flex:1;
+    border:none;
+    background:var(--card-alt);
+    color:var(--ink-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:11px 6px;
+    cursor:pointer;
+  }
+  .split-toggle button + button{ border-left:2.5px solid var(--ink); }
+  .split-toggle button.active{
+    background:var(--green-btn);
+    color:#fff;
+  }
+  .split-hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:-6px 0 14px;
   }
   .field .input-row{
     display:flex;
@@ -339,6 +385,146 @@
     font-family:inherit;
     padding:6px;
   }
+
+  /* ---------- 単元名の入力モーダル ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(34,26,18,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    z-index:50;
+  }
+  .modal-card{
+    background:var(--card);
+    border:var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px;
+    width:100%;
+    max-width:400px;
+    max-height:84vh;
+    display:flex;
+    flex-direction:column;
+  }
+  .unit-name-list{
+    overflow-y:auto;
+    margin:6px -4px 10px;
+    padding:0 4px;
+  }
+  .unit-name-field{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .unit-no{
+    flex-shrink:0;
+    width:34px;
+    height:34px;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-name-field input{
+    flex:1;
+    min-width:0;
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 11px;
+    font-size:13px;
+    font-family:inherit;
+    background:var(--card-alt);
+    color:var(--ink);
+  }
+  .unit-name-field input:focus{ outline:none; background:#FFFDF9; }
+  .modal-actions{
+    display:flex;
+    gap:10px;
+  }
+  .modal-actions .primary-btn{ flex:1; }
+  .ghost-btn{
+    border:2.5px solid var(--ink);
+    background:var(--card-alt);
+    color:var(--ink);
+    border-radius:14px;
+    padding:14px 18px;
+    font-size:14px;
+    font-weight:700;
+    font-family:'Zen Maru Gothic', sans-serif;
+    cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    flex-shrink:0;
+  }
+  .ghost-btn:active{ transform:translate(2px,2px); box-shadow:none; }
+
+  .confirm-card{ max-width:340px; gap:14px; }
+  .confirm-card .card-title{ font-size:15px; line-height:1.5; margin:4px 0 8px; }
+
+  @media (min-width:760px){
+    .modal-card{ max-width:680px; }
+    .unit-name-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:10px 14px;
+    }
+    .unit-name-field{ margin-bottom:0; }
+  }
+
+  /* ---------- 画面B：単元カードのグリッド（横に段組み） ---------- */
+  .unit-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .unit-cell{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    background:var(--card-alt);
+    border:2px solid var(--ink);
+    border-radius:14px;
+    padding:12px;
+    min-height:132px;
+  }
+  .unit-cell.done{ background:var(--leaf-soft); }
+  .unit-cell.current{ background:var(--gold-soft); }
+  .unit-cell.locked{ opacity:0.5; }
+  .unit-cell .unit-no{
+    align-self:flex-start;
+    width:26px;
+    height:26px;
+    border:2px solid var(--ink);
+    border-radius:8px;
+    background:var(--gold-soft);
+    font-family:'Zen Maru Gothic', sans-serif;
+    font-weight:900;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .unit-cell.done .unit-no{ background:var(--leaf); color:#fff; }
+  .unit-cell .unit-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+  .unit-cell .unit-nm{ font-size:13px; font-weight:700; word-break:break-word; line-height:1.35; }
+  .unit-cell .unit-range{ font-size:10.5px; color:var(--ink-soft); font-weight:500; }
+  .unit-cell .task-btn{ width:100%; padding:9px 8px; }
+  .unit-cell .task-btn[disabled]{
+    background:var(--bg);
+    color:var(--ink-soft);
+    border-color:var(--ink-soft);
+    box-shadow:none;
+    cursor:not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -349,36 +535,33 @@
   <div id="screenA">
     <div class="card">
       <div class="card-title">はじめに設定しよう</div>
-      <div class="card-desc">写真・背景と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
+      <div class="card-desc">写真と、参考書の情報を登録すると、あなた専用の育成プロジェクトが始まります。</div>
 
       <div class="upload-row">
-        <div>
-          <label class="upload-box" id="faceBox">
-            <span class="placeholder-content" id="facePlaceholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
-              <span>顔・写真</span>
-            </span>
-            <input type="file" accept="image/*" id="faceInput">
-          </label>
-          <div class="upload-label">顔追加</div>
-        </div>
-        <div>
-          <label class="upload-box" id="bgBox">
-            <span class="placeholder-content" id="bgPlaceholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5" /><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
-              <span>背景</span>
-            </span>
-            <input type="file" accept="image/*" id="bgInput">
-          </label>
-          <div class="upload-label">背景追加</div>
-        </div>
+        <label class="upload-box" id="photoBox">
+          <span class="placeholder-content" id="photoPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16l4-4 3 3 5-6 4 5"/><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+            <span>写真を追加</span>
+          </span>
+          <input type="file" accept="image/*" id="photoInput">
+        </label>
+        <div class="upload-label">キャラクターにする写真を1枚選んでください</div>
       </div>
 
       <div class="field">
-        <label>本一冊の合計ページ数</label>
+        <label>どうやって日割りする？</label>
+        <div class="split-toggle" id="splitToggle">
+          <button type="button" data-mode="pages" class="active">ページで分ける</button>
+          <button type="button" data-mode="units">単元で分ける</button>
+        </div>
+        <div class="split-hint" id="splitHint">参考書の合計ページ数を、日数で等分して1日のノルマにします。</div>
+      </div>
+
+      <div class="field">
+        <label id="totalAmountLabel">本一冊の合計ページ数</label>
         <div class="input-row">
-          <input type="number" id="totalPagesInput" min="1" placeholder="例）240">
-          <span class="unit">ページ</span>
+          <input type="number" id="totalAmountInput" min="1" placeholder="例）240">
+          <span class="unit" id="totalAmountUnit">ページ</span>
         </div>
       </div>
 
@@ -414,29 +597,58 @@
     </div>
 
     <div class="card">
-      <div class="card-title">今日のタスク</div>
+      <div class="card-title" id="taskCardTitle">今日のタスク</div>
       <div class="card-desc" id="taskDesc"></div>
 
-      <div class="task-row" id="reviewRow">
-        <div class="task-info">
-          <div class="task-name">復習</div>
-          <div class="task-amount" id="reviewAmount">0 ページ</div>
+      <div id="pagesTasks">
+        <div class="task-row" id="reviewRow">
+          <div class="task-info">
+            <div class="task-name">復習</div>
+            <div class="task-amount" id="reviewAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="reviewBtn">やった</button>
         </div>
-        <button class="task-btn" id="reviewBtn">やった</button>
+
+        <div class="task-row" id="mainRow">
+          <div class="task-info">
+            <div class="task-name">本学習</div>
+            <div class="task-amount" id="mainAmount">0 ページ</div>
+          </div>
+          <button class="task-btn" id="mainBtn">やった</button>
+        </div>
       </div>
 
-      <div class="task-row" id="mainRow">
-        <div class="task-info">
-          <div class="task-name">本学習</div>
-          <div class="task-amount" id="mainAmount">0 ページ</div>
-        </div>
-        <button class="task-btn" id="mainBtn">やった</button>
-      </div>
+      <div id="unitTasks" class="unit-grid hidden"></div>
 
       <button class="change-char-btn" id="changeCharBtn">キャラクターを変える</button>
       <div class="change-char-note" id="changeCharNote">Lv50に到達すると、キャラクターを変更できます</div>
 
       <button class="day-advance" id="dayAdvanceBtn">（デモ用）翌日へ進める</button>
+    </div>
+  </div>
+
+  <!-- ============ 単元名の入力（モーダル） ============ -->
+  <div id="unitModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="card-title">単元の名前を入力</div>
+      <div class="card-desc">各単元に名前をつけましょう。番号の小さい順に取り組みます。空欄のままでもかまいません（「単元1」などになります）。</div>
+      <div class="unit-name-list" id="unitNameList"></div>
+      <div class="form-error" id="unitModalError"></div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="unitModalBack">もどる</button>
+        <button class="primary-btn" id="unitModalConfirm">この内容で始める</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 確認（モーダル） ============ -->
+  <div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal-card confirm-card">
+      <div class="card-title" id="confirmText">ほんまにやった？</div>
+      <div class="modal-actions">
+        <button class="ghost-btn" id="confirmNo">まだ</button>
+        <button class="primary-btn" id="confirmYes">やった！</button>
+      </div>
     </div>
   </div>
 </div>
@@ -466,15 +678,35 @@
     ],
   };
 
+  // 日割りの分け方。'pages'（ページ単位）／'units'（単元単位）
+  const SPLIT_MODES = {
+    pages: {
+      label: 'ページ',
+      fieldLabel: '本一冊の合計ページ数',
+      placeholder: '例）240',
+      hint: '参考書の合計ページ数を、日数で等分して1日のノルマにします。',
+    },
+    units: {
+      label: '単元',
+      fieldLabel: '本一冊の合計単元数',
+      placeholder: '例）12',
+      hint: '章・単元の数を、日数で等分して1日のノルマにします。ページ数がバラバラな参考書向け。',
+    },
+  };
+
   let state = {
     registered:false,
-    facePhoto:null,
-    bgPhoto:null,
-    totalPages:0,
+    photo:null,
+    splitMode:'pages',
+    unitLabel:'ページ',
+    totalAmount:0,
     totalDays:0,
-    reviewPages:0,
-    mainPages:0,
+    reviewAmount:0,
+    mainAmount:0,
     xpPerDay:0,
+    units:[],        // 単元モード用：[{ n, name, done }]
+    xpPerUnit:0,
+    daysPerUnit:0,   // 単元モード：1単元あたりの割り当て日数
     xp:0,
     reviewDoneToday:false,
     mainDoneToday:false,
@@ -482,16 +714,28 @@
   };
 
   const els = {
-    faceBox: document.getElementById('faceBox'),
-    faceInput: document.getElementById('faceInput'),
-    facePlaceholder: document.getElementById('facePlaceholder'),
-    bgBox: document.getElementById('bgBox'),
-    bgInput: document.getElementById('bgInput'),
-    bgPlaceholder: document.getElementById('bgPlaceholder'),
-    totalPagesInput: document.getElementById('totalPagesInput'),
+    photoBox: document.getElementById('photoBox'),
+    photoInput: document.getElementById('photoInput'),
+    photoPlaceholder: document.getElementById('photoPlaceholder'),
+    splitToggle: document.getElementById('splitToggle'),
+    splitHint: document.getElementById('splitHint'),
+    totalAmountLabel: document.getElementById('totalAmountLabel'),
+    totalAmountInput: document.getElementById('totalAmountInput'),
+    totalAmountUnit: document.getElementById('totalAmountUnit'),
     totalDaysInput: document.getElementById('totalDaysInput'),
     formError: document.getElementById('formError'),
     registerBtn: document.getElementById('registerBtn'),
+
+    unitModal: document.getElementById('unitModal'),
+    unitNameList: document.getElementById('unitNameList'),
+    unitModalError: document.getElementById('unitModalError'),
+    unitModalBack: document.getElementById('unitModalBack'),
+    unitModalConfirm: document.getElementById('unitModalConfirm'),
+
+    confirmModal: document.getElementById('confirmModal'),
+    confirmText: document.getElementById('confirmText'),
+    confirmYes: document.getElementById('confirmYes'),
+    confirmNo: document.getElementById('confirmNo'),
 
     screenA: document.getElementById('screenA'),
     screenB: document.getElementById('screenB'),
@@ -502,7 +746,10 @@
     expDetail: document.getElementById('expDetail'),
     expFill: document.getElementById('expFill'),
 
+    taskCardTitle: document.getElementById('taskCardTitle'),
     taskDesc: document.getElementById('taskDesc'),
+    pagesTasks: document.getElementById('pagesTasks'),
+    unitTasks: document.getElementById('unitTasks'),
     reviewRow: document.getElementById('reviewRow'),
     reviewAmount: document.getElementById('reviewAmount'),
     reviewBtn: document.getElementById('reviewBtn'),
@@ -520,6 +767,25 @@
   function currentLevel(){
     return Math.min(MAX_LEVEL, Math.floor(state.xp / XP_PER_LEVEL) + 1);
   }
+
+  // ---------- 確認モーダル（ネイティブconfirmの代わり） ----------
+  let confirmResolver = null;
+  function askConfirm(message){
+    els.confirmText.textContent = message;
+    els.confirmModal.classList.remove('hidden');
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function closeConfirm(result){
+    els.confirmModal.classList.add('hidden');
+    const resolve = confirmResolver;
+    confirmResolver = null;
+    if(resolve) resolve(result);
+  }
+  els.confirmYes.addEventListener('click', () => closeConfirm(true));
+  els.confirmNo.addEventListener('click', () => closeConfirm(false));
+  els.confirmModal.addEventListener('click', e => {
+    if(e.target === els.confirmModal) closeConfirm(false);
+  });
 
   // ---------- 画像アップロード ----------
   function bindUpload(box, input, placeholder, onLoaded){
@@ -540,16 +806,43 @@
       reader.readAsDataURL(file);
     });
   }
-  bindUpload(els.faceBox, els.faceInput, els.facePlaceholder, (src) => { state.facePhoto = src; });
-  bindUpload(els.bgBox, els.bgInput, els.bgPlaceholder, (src) => { state.bgPhoto = src; });
+  bindUpload(els.photoBox, els.photoInput, els.photoPlaceholder, (src) => { state.photo = src; });
+
+  // ---------- 画面A：分け方の切り替え ----------
+  function applySplitMode(mode){
+    if(!SPLIT_MODES[mode]) mode = 'pages';
+    state.splitMode = mode;
+    state.unitLabel = SPLIT_MODES[mode].label;
+
+    els.splitToggle.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+    els.totalAmountLabel.textContent = SPLIT_MODES[mode].fieldLabel;
+    els.totalAmountInput.placeholder = SPLIT_MODES[mode].placeholder;
+    els.totalAmountUnit.textContent = SPLIT_MODES[mode].label;
+    els.splitHint.textContent = SPLIT_MODES[mode].hint;
+  }
+  els.splitToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-mode]');
+    if(!btn) return;
+    applySplitMode(btn.dataset.mode);
+  });
+  applySplitMode(state.splitMode);
 
   // ---------- 画面A：登録 ----------
-  els.registerBtn.addEventListener('click', () => {
-    const totalPages = parseInt(els.totalPagesInput.value, 10);
-    const totalDays = parseInt(els.totalDaysInput.value, 10);
+  const MAX_UNITS = 100;
 
-    if(!totalPages || totalPages < 1){
-      els.formError.textContent = '合計ページ数を正しく入力してください。';
+  els.registerBtn.addEventListener('click', () => {
+    const totalAmount = parseInt(els.totalAmountInput.value, 10);
+    const totalDays = parseInt(els.totalDaysInput.value, 10);
+    const unit = state.unitLabel;
+
+    if(!totalAmount || totalAmount < 1){
+      els.formError.textContent = '合計' + unit + '数を正しく入力してください。';
+      return;
+    }
+    if(state.splitMode === 'units' && totalAmount > MAX_UNITS){
+      els.formError.textContent = '単元数は' + MAX_UNITS + '以下で入力してください。';
       return;
     }
     if(!totalDays || totalDays < 1){
@@ -559,24 +852,73 @@
     els.formError.textContent = '';
 
     state.registered = true;
-    state.totalPages = totalPages;
+    state.totalAmount = totalAmount;
     state.totalDays = totalDays;
 
-    const pagesPerDay = Math.ceil(totalPages / totalDays);
-    state.mainPages = pagesPerDay;
-    state.reviewPages = Math.max(1, Math.round(pagesPerDay * 0.3));
+    if(state.splitMode === 'units'){
+      openUnitModal(totalAmount);
+      return;
+    }
+
+    const amountPerDay = Math.ceil(totalAmount / totalDays);
+    state.mainAmount = amountPerDay;
+    state.reviewAmount = Math.max(1, Math.round(amountPerDay * 0.3));
     state.xpPerDay = TOTAL_XP / totalDays;
 
+    goToScreenB('ここから始めよう。今日のタスクを見てみて。');
+  });
+
+  function goToScreenB(message){
     renderScreenB();
     els.screenA.classList.add('hidden');
     els.screenB.classList.remove('hidden');
-    showSpeech('ここから始めよう。今日のタスクを見てみて。');
+    document.body.classList.add('screen-b');
+    if(message) showSpeech(message);
+  }
+
+  // ---------- 画面A：単元名の入力モーダル ----------
+  function openUnitModal(count){
+    els.unitNameList.innerHTML = '';
+    for(let i = 1; i <= count; i++){
+      const prev = state.units.find(u => u.n === i);
+      const field = document.createElement('label');
+      field.className = 'unit-name-field';
+      field.innerHTML =
+        '<span class="unit-no">' + i + '</span>' +
+        '<input type="text" maxlength="30" placeholder="単元' + i + '（例：三角関数）">';
+      if(prev && prev.name && prev.name !== ('単元' + i)){
+        field.querySelector('input').value = prev.name;
+      }
+      els.unitNameList.appendChild(field);
+    }
+    els.unitModalError.textContent = '';
+    els.unitModal.classList.remove('hidden');
+    const first = els.unitNameList.querySelector('input');
+    if(first) first.focus();
+  }
+
+  function closeUnitModal(){
+    els.unitModal.classList.add('hidden');
+  }
+
+  els.unitModalBack.addEventListener('click', closeUnitModal);
+
+  els.unitModalConfirm.addEventListener('click', () => {
+    const inputs = [...els.unitNameList.querySelectorAll('input')];
+    state.units = inputs.map((inp, idx) => {
+      const n = idx + 1;
+      return { n, name: inp.value.trim() || ('単元' + n), done:false };
+    });
+    state.xpPerUnit = TOTAL_XP / state.units.length;
+    state.daysPerUnit = Math.max(1, Math.round(state.totalDays / state.units.length));
+    state.daysPassed = 0;
+    closeUnitModal();
+    goToScreenB('単元を' + state.units.length + '個登録したよ。1つずつ、順番に終わらせていこう。');
   });
 
   // ---------- 画面B：描画 ----------
   function renderScreenB(){
-    const visualPhoto = state.facePhoto || state.bgPhoto;
-    els.charVisual.style.backgroundImage = visualPhoto ? `url(${visualPhoto})` : '';
+    els.charVisual.style.backgroundImage = state.photo ? `url(${state.photo})` : '';
 
     const level = currentLevel();
     els.levelPill.textContent = 'Lv.' + level;
@@ -586,13 +928,28 @@
     els.expFill.style.width = pct + '%';
     els.expDetail.textContent = 'Lv ' + level + ' / Lv' + MAX_LEVEL;
 
-    els.taskDesc.textContent = '本一冊 ' + state.totalPages + 'ページを ' + state.totalDays + '日で終える設定です。';
+    const isUnits = state.splitMode === 'units';
+    els.pagesTasks.classList.toggle('hidden', isUnits);
+    els.unitTasks.classList.toggle('hidden', !isUnits);
+    els.dayAdvanceBtn.classList.toggle('hidden', isUnits);
 
-    els.reviewAmount.textContent = state.reviewPages + ' ページ';
-    els.mainAmount.textContent = state.mainPages + ' ページ';
-
-    updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
-    updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+    if(isUnits){
+      const doneCount = state.units.filter(u => u.done).length;
+      els.taskCardTitle.textContent = '単元リスト';
+      els.taskDesc.textContent =
+        '全' + state.units.length + '単元（' + doneCount + '／' + state.units.length + ' 完了）。' +
+        (doneCount >= state.units.length
+          ? 'すべて終わりました！'
+          : '前の単元を終わらせると、次の単元が解放されます。');
+      renderUnitTasks();
+    } else {
+      els.taskCardTitle.textContent = '今日のタスク';
+      els.taskDesc.textContent = '本一冊 ' + state.totalAmount + state.unitLabel + 'を ' + state.totalDays + '日で終える設定です。';
+      els.reviewAmount.textContent = state.reviewAmount + ' ' + state.unitLabel;
+      els.mainAmount.textContent = state.mainAmount + ' ' + state.unitLabel;
+      updateTaskRow(els.reviewRow, els.reviewBtn, state.reviewDoneToday);
+      updateTaskRow(els.mainRow, els.mainBtn, state.mainDoneToday);
+    }
 
     const maxed = level >= MAX_LEVEL;
     els.changeCharBtn.classList.toggle('locked', !maxed);
@@ -614,11 +971,11 @@
     els.speechBubble.classList.add('show');
   }
 
-  function completeTask(kind){
+  async function completeTask(kind){
     const alreadyDone = kind === 'review' ? state.reviewDoneToday : state.mainDoneToday;
     if(alreadyDone) return;
 
-    const ok = confirm('ほんまにやった？');
+    const ok = await askConfirm('ほんまにやった？');
     if(!ok) return;
 
     const prevLevel = currentLevel();
@@ -643,6 +1000,71 @@
   els.reviewBtn.addEventListener('click', () => completeTask('review'));
   els.mainBtn.addEventListener('click', () => completeTask('main'));
 
+  // ---------- 画面B：単元リスト（全表示・前の単元をクリアで解放） ----------
+  function unitStartDay(n){ return (n - 1) * state.daysPerUnit + 1; }
+  function unitEndDay(n){
+    const raw = n === state.units.length ? state.totalDays : n * state.daysPerUnit;
+    return Math.max(raw, unitStartDay(n));
+  }
+  // n番目の単元が解放済みか＝1番目、または直前の単元が完了している
+  function isUnitUnlocked(n){
+    if(n <= 1) return true;
+    const prev = state.units.find(u => u.n === n - 1);
+    return !!(prev && prev.done);
+  }
+
+  function renderUnitTasks(){
+    els.unitTasks.innerHTML = '';
+    const sorted = [...state.units].sort((a, b) => a.n - b.n);
+    sorted.forEach(u => {
+      const unlocked = isUnitUnlocked(u.n);
+      const locked = !u.done && !unlocked;
+      const current = !u.done && unlocked;
+      const cell = document.createElement('div');
+      cell.className = 'unit-cell' + (u.done ? ' done' : '') + (locked ? ' locked' : '') + (current ? ' current' : '');
+      const btnText = u.done ? 'やった✓' : (locked ? '🔒' : 'やった');
+      cell.innerHTML =
+        '<span class="unit-no">' + u.n + '</span>' +
+        '<span class="unit-info">' +
+          '<span class="unit-nm"></span>' +
+          '<span class="unit-range">目安 ' + unitStartDay(u.n) + '〜' + unitEndDay(u.n) + '日目</span>' +
+        '</span>' +
+        '<button class="task-btn' + (u.done ? ' done' : '') + '"' + (locked ? ' disabled' : '') + '>' + btnText + '</button>';
+      cell.querySelector('.unit-nm').textContent = u.name;
+      if(!u.done && !locked){
+        cell.querySelector('button').addEventListener('click', () => completeUnit(u.n));
+      }
+      els.unitTasks.appendChild(cell);
+    });
+  }
+
+  async function completeUnit(n){
+    const unit = state.units.find(u => u.n === n);
+    if(!unit || unit.done) return;
+    if(!isUnitUnlocked(n)){
+      showSpeech('前の単元を終わらせてから挑戦しよう。');
+      return;
+    }
+
+    const ok = await askConfirm('「' + unit.name + '」やった？');
+    if(!ok) return;
+
+    const prevLevel = currentLevel();
+    state.xp = Math.min(TOTAL_XP, state.xp + state.xpPerUnit);
+    unit.done = true;
+
+    renderScreenB();
+
+    const newLevel = currentLevel();
+    if(state.units.every(u => u.done)){
+      showSpeech('全単元クリア！ここまで走りきったの、本当にすごいよ。');
+    } else if(newLevel > prevLevel){
+      showSpeech(randomFrom(MESSAGES.levelUp));
+    } else {
+      showSpeech(randomFrom(MESSAGES.complete));
+    }
+  }
+
   els.changeCharBtn.addEventListener('click', () => {
     const maxed = currentLevel() >= MAX_LEVEL;
 
@@ -653,6 +1075,7 @@
 
     els.screenB.classList.add('hidden');
     els.screenA.classList.remove('hidden');
+    document.body.classList.remove('screen-b');
   });
 
   els.dayAdvanceBtn.addEventListener('click', () => {
